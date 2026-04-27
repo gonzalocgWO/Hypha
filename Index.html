@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HYPHA · PDG-2026 Genesis Node Report</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --gold:#c9941a;--gold-dim:rgba(201,148,26,0.55);--gold-faint:rgba(201,148,26,0.12);
+    --gold-glow:rgba(201,148,26,0.08);--bg:#0e0d0b;--bg2:#131210;--bg3:#181610;
+    --border:rgba(201,148,26,0.13);--border-strong:rgba(201,148,26,0.28);
+    --text:#e8e0cc;--text-dim:rgba(232,224,204,0.55);--text-faint:rgba(232,224,204,0.3);--w:1024px;
+  }
+  html{background:#080807}
+  body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:2rem 1rem 4rem;-webkit-font-smoothing:antialiased}
+  .page{width:100%;max-width:var(--w);background:var(--bg);border-radius:20px;overflow:hidden;border:1px solid var(--border);box-shadow:0 0 80px rgba(201,148,26,0.06),0 0 0 1px rgba(201,148,26,0.05)}
+  .header{background:var(--bg2);border-bottom:1px solid var(--border);padding:2.5rem 2.5rem 2rem;position:relative;overflow:hidden}
+  .header::after{content:'⬡ ⬡ ⬡ ⬡';position:absolute;right:2rem;top:1.5rem;font-size:2.5rem;color:var(--gold);opacity:.06;letter-spacing:12px;pointer-events:none}
+  .logo-row{display:flex;align-items:center;gap:16px;margin-bottom:1rem;opacity:0;transform:translateY(12px);animation:fadeUp .7s ease forwards .1s}
+  .logo-img{height:36px;width:auto;display:block;animation:glowPulse 3s ease-in-out infinite 1s}
+  @keyframes glowPulse{0%,100%{filter:drop-shadow(0 0 4px rgba(201,148,26,0.1))}50%{filter:drop-shadow(0 0 14px rgba(201,148,26,0.4))}}
+  .header-sub{font-size:11px;text-transform:uppercase;letter-spacing:.18em;color:var(--gold-dim);font-weight:600;margin-top:2px}
+  .header-desc{font-size:13px;color:var(--text-faint);margin-top:.5rem;opacity:0;animation:fadeUp .7s ease forwards .3s}
+  .header-desc span{color:rgba(201,148,26,0.65)}
+  .kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--border);border-bottom:1px solid var(--border)}
+  .kpi-cell{background:var(--bg);padding:1.5rem 1rem;text-align:center;cursor:default;transition:background .25s;opacity:0;animation:fadeIn .5s ease forwards}
+  .kpi-cell:nth-child(1){animation-delay:.35s}.kpi-cell:nth-child(2){animation-delay:.45s}.kpi-cell:nth-child(3){animation-delay:.55s}.kpi-cell:nth-child(4){animation-delay:.65s}
+  .kpi-cell:hover{background:var(--bg3)}
+  .kpi-num{font-size:38px;font-weight:700;color:var(--gold);line-height:1;letter-spacing:-.05em;font-variant-numeric:tabular-nums;transition:transform .2s}
+  .kpi-cell:hover .kpi-num{transform:scale(1.05)}
+  .kpi-label{font-size:11px;color:var(--text-faint);text-transform:uppercase;letter-spacing:.1em;margin-top:6px}
+  .section{padding:2rem 2.5rem;border-bottom:1px solid var(--border);opacity:0;transform:translateY(16px);transition:opacity .6s ease,transform .6s ease}
+  .section.visible{opacity:1;transform:translateY(0)}
+  .section-title{font-size:10px;text-transform:uppercase;letter-spacing:.2em;color:var(--gold-dim);font-weight:600;margin-bottom:1.25rem;display:flex;align-items:center;gap:10px}
+  .section-title::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,var(--border-strong),transparent)}
+  .two-col{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--border);border-bottom:1px solid var(--border)}
+  .two-col>.section{border-bottom:none}
+  .bar-row{display:flex;align-items:center;gap:10px;margin-bottom:10px;cursor:pointer;border-radius:6px;padding:4px 6px;margin-left:-6px;transition:background .2s}
+  .bar-row:hover{background:var(--gold-glow)}
+  .bar-label{font-size:12px;color:var(--text-dim);min-width:190px;max-width:190px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:color .2s}
+  .bar-row:hover .bar-label{color:var(--text)}
+  .bar-track{flex:1;height:5px;background:rgba(255,255,255,.05);border-radius:3px;overflow:hidden}
+  .bar-fill{height:100%;border-radius:3px;background:var(--gold);width:0%;transition:width 1s cubic-bezier(.4,0,.2,1)}
+  .bar-fill.g{background:rgba(201,148,26,0.5)}.bar-fill.d{background:rgba(201,148,26,0.28)}
+  .bar-count{font-size:11px;color:var(--text-faint);min-width:22px;text-align:right;font-variant-numeric:tabular-nums;transition:color .2s}
+  .bar-row:hover .bar-count{color:var(--gold)}
+  .tooltip{position:fixed;background:#1c1a14;border:1px solid var(--border-strong);border-radius:8px;padding:10px 14px;font-size:12px;color:var(--text);pointer-events:none;z-index:9999;max-width:260px;opacity:0;transition:opacity .15s;box-shadow:0 8px 32px rgba(0,0,0,0.5);line-height:1.5}
+  .tooltip.show{opacity:1}
+  .tooltip strong{color:var(--gold);display:block;margin-bottom:4px;font-size:11px;text-transform:uppercase;letter-spacing:.1em}
+  .commit-grid{display:flex;gap:10px;align-items:flex-end;height:90px}
+  .commit-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer}
+  .commit-bar-wrap{width:100%;display:flex;align-items:flex-end;justify-content:center;height:58px}
+  .commit-bar{width:80%;border-radius:4px 4px 0 0;background:var(--gold);height:0;transition:height 1s cubic-bezier(.4,0,.2,1)}
+  .commit-col:hover .commit-bar{opacity:.75}
+  .commit-num{font-size:13px;font-weight:600;color:var(--gold);font-variant-numeric:tabular-nums}
+  .commit-lbl{font-size:9px;color:var(--text-faint);text-align:center;letter-spacing:.06em;text-transform:uppercase}
+  .donut-wrap{display:flex;align-items:center;gap:2rem}
+  .donut-svg{flex-shrink:0}
+  .donut-legend{flex:1;display:flex;flex-direction:column;gap:8px}
+  .legend-row{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text-dim);cursor:pointer;padding:4px 6px;border-radius:6px;transition:background .2s}
+  .legend-row:hover{background:var(--gold-glow);color:var(--text)}
+  .legend-dot{width:10px;height:10px;border-radius:3px;flex-shrink:0}
+  .legend-pct{margin-left:auto;font-size:11px;color:var(--text-faint);font-variant-numeric:tabular-nums}
+  .tag-cloud{display:flex;flex-wrap:wrap;gap:7px}
+  .tag{font-size:11px;font-weight:500;border:1px solid var(--border-strong);border-radius:20px;padding:5px 13px;color:var(--gold-dim);cursor:pointer;transition:all .2s;opacity:0;transform:scale(.9)}
+  .tag.visible{opacity:1;transform:scale(1)}
+  .tag:hover{background:var(--gold-faint);border-color:var(--gold);color:var(--gold);transform:scale(1.04)}
+  .tag.sm{opacity:0;font-size:10px;border-color:var(--border);color:var(--text-faint)}
+  .tag.sm.visible{opacity:.55}.tag.sm:hover{opacity:1}
+  .tag.lg{border-color:var(--gold);color:var(--gold);font-size:12px;background:var(--gold-glow)}
+  .node-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:8px}
+  .node-card{border:1px solid var(--border);border-radius:10px;padding:12px 14px;background:var(--gold-glow);cursor:pointer;transition:all .25s;opacity:0;transform:translateY(8px);position:relative;overflow:hidden}
+  .node-card.visible{opacity:1;transform:translateY(0)}
+  .node-card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);opacity:0;transition:opacity .3s}
+  .node-card:hover{border-color:var(--border-strong);background:rgba(201,148,26,0.09);transform:translateY(-2px)}
+  .node-card:hover::before{opacity:1}
+  .node-name{font-size:12px;font-weight:600;color:#f0e8d0;line-height:1.3;margin-bottom:3px}
+  .node-role{font-size:10px;color:var(--text-faint);line-height:1.4}
+  .node-badge{display:inline-block;margin-top:7px;font-size:9px;font-weight:600;border:1px solid rgba(201,148,26,0.3);border-radius:10px;padding:2px 9px;color:var(--gold-dim);text-transform:uppercase;letter-spacing:.09em;background:rgba(201,148,26,0.05)}
+  .slider-section{padding:2rem 2.5rem 2.5rem;border-bottom:1px solid var(--border);opacity:0;transform:translateY(16px);transition:opacity .6s ease,transform .6s ease}
+  .slider-section.visible{opacity:1;transform:translateY(0)}
+  .slider-track-wrap{position:relative;overflow:hidden}
+  .slider-track{display:flex;transition:transform .5s cubic-bezier(.4,0,.2,1);will-change:transform}
+  .slide{min-width:100%;padding:2rem 2.5rem;background:rgba(201,148,26,0.04);border:1px solid var(--border);border-radius:14px;box-sizing:border-box;position:relative;overflow:hidden}
+  .slide::before{content:'\201C';position:absolute;top:-8px;left:16px;font-size:80px;color:rgba(201,148,26,0.12);font-family:Georgia,serif;line-height:1;pointer-events:none}
+  .slide-text{font-size:14px;line-height:1.7;color:rgba(232,224,204,0.85);margin-bottom:1.25rem;position:relative;z-index:1}
+  .slide-author{display:flex;align-items:center;gap:12px}
+  .slide-avatar{width:34px;height:34px;border-radius:50%;background:rgba(201,148,26,0.15);border:1px solid rgba(201,148,26,0.3);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--gold);flex-shrink:0;text-transform:uppercase}
+  .slide-name{font-size:13px;font-weight:600;color:#f0e8d0}
+  .slide-role{font-size:11px;color:var(--text-faint);margin-top:1px}
+  .slide-sector{margin-left:auto;font-size:9px;font-weight:600;border:1px solid rgba(201,148,26,0.25);border-radius:10px;padding:3px 10px;color:var(--gold-dim);text-transform:uppercase;letter-spacing:.09em;background:rgba(201,148,26,0.05);white-space:nowrap;flex-shrink:0}
+  .slider-controls{display:flex;align-items:center;justify-content:space-between;margin-top:1.25rem}
+  .slider-dots{display:flex;gap:6px;align-items:center;flex-wrap:wrap;flex:1}
+  .slider-dot{width:5px;height:5px;border-radius:50%;background:rgba(201,148,26,0.2);cursor:pointer;transition:all .25s;border:none;padding:0}
+  .slider-dot.active{background:var(--gold);width:18px;border-radius:3px}
+  .slider-dot:hover:not(.active){background:rgba(201,148,26,0.5)}
+  .slider-btns{display:flex;gap:8px}
+  .slider-btn{width:34px;height:34px;border-radius:50%;border:1px solid var(--border-strong);background:transparent;color:var(--gold);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;transition:all .2s}
+  .slider-btn:hover{background:var(--gold-faint);border-color:var(--gold)}
+  .slider-btn:active{transform:scale(.95)}
+  .slider-counter{font-size:11px;color:var(--text-faint);font-variant-numeric:tabular-nums;margin-right:12px;white-space:nowrap}
+  .slider-auto-bar{height:2px;background:rgba(201,148,26,0.15);border-radius:1px;margin-top:10px;overflow:hidden}
+  .slider-auto-fill{height:100%;background:var(--gold);width:0%;border-radius:1px;transition:width linear}
+  .footer{padding:1.25rem 2.5rem;display:flex;align-items:center;justify-content:space-between;border-top:1px solid var(--border);background:var(--bg2)}
+  .footer-text{font-size:10px;color:var(--text-faint);letter-spacing:.12em;text-transform:uppercase;font-weight:500}
+  .footer-logo{height:18px;width:auto;opacity:.4}
+  .pulse-dot{width:6px;height:6px;border-radius:50%;background:var(--gold);display:inline-block;margin-right:7px;animation:pulse 2.5s ease-in-out infinite}
+  @keyframes pulse{0%,100%{opacity:.2;transform:scale(1)}50%{opacity:1;transform:scale(1.4)}}
+  @keyframes fadeUp{to{opacity:1;transform:translateY(0)}}
+  @keyframes fadeIn{to{opacity:1}}
+  @media(max-width:700px){
+    body{padding:0}.page{border-radius:0;border-left:none;border-right:none}
+    .header{padding:1.5rem 1.25rem 1.25rem}.header::after{display:none}
+    .kpi-grid{grid-template-columns:repeat(2,1fr)}
+    .section{padding:1.5rem 1.25rem}.slider-section{padding:1.5rem 1.25rem 2rem}
+    .slide{padding:1.5rem 1.25rem}.two-col{grid-template-columns:1fr}
+    .bar-label{min-width:130px;max-width:130px}.donut-wrap{flex-direction:column;align-items:flex-start}
+    .node-grid{grid-template-columns:repeat(2,1fr)}.slide-sector{display:none}
+    .slide-text{font-size:13px}.footer{flex-direction:column;gap:8px;text-align:center;padding:1rem 1.25rem}
+  }
+  @media(max-width:400px){
+    .bar-label{min-width:100px;max-width:100px;font-size:11px}.kpi-num{font-size:30px}.node-grid{grid-template-columns:1fr}
+  }
+</style>
+</head>
+<body>
+<div class="tooltip" id="tooltip"></div>
+<div class="page">
+  <div class="header">
+    <div class="logo-row">
+      <img class="logo-img" src="data:image/png;base64,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" alt="HYPHA">
+      <div><div class="header-sub">PDG-2026 · Genesis Node Report</div></div>
+    </div>
+    <div class="header-desc">Datos extraídos el 27 Abr 2026 · <span>51 submissions procesadas</span> · Red activa</div>
+  </div>
+  <div class="kpi-grid">
+    <div class="kpi-cell" data-tip="Total de profesionales que activaron su nodo en la red HYPHA PDG-2026."><div class="kpi-num" data-target="51">0</div><div class="kpi-label">Nodos activados</div></div>
+    <div class="kpi-cell" data-tip="Participantes que autorizaron el uso de sus datos para conexiones inteligentes y oportunidades tokenizadas."><div class="kpi-num" data-target="33">0</div><div class="kpi-label">Autorizaron datos</div></div>
+    <div class="kpi-cell" data-tip="Número de sectores distintos representados en la red Genesis."><div class="kpi-num" data-target="18">0</div><div class="kpi-label">Sectores</div></div>
+    <div class="kpi-cell" data-tip="Perfiles plenamente identificados con nombre, cargo y empresa."><div class="kpi-num" data-target="30">0</div><div class="kpi-label">Perfiles identificados</div></div>
+  </div>
+  <div class="section" id="s-sector"><div class="section-title">Distribución sectorial — Áreas de expertise</div><div id="sector-bars"></div></div>
+  <div class="two-col">
+    <div class="section" id="s-prio"><div class="section-title">Prioridades críticas demandadas</div><div id="prio-bars"></div></div>
+    <div class="section" id="s-inv"><div class="section-title">Foco de inversión & deal-flow</div><div class="donut-wrap"><svg class="donut-svg" id="donut-svg" width="130" height="130" viewBox="0 0 130 130"></svg><div class="donut-legend" id="donut-legend"></div></div></div>
+  </div>
+  <div class="two-col">
+    <div class="section" id="s-commit"><div class="section-title">Nivel de compromiso</div><div class="commit-grid" id="commit-bars"></div></div>
+    <div class="section" id="s-agente"><div class="section-title">System Check — Dominio del Agente Edu</div><div id="agente-bars"></div></div>
+  </div>
+  <div class="section" id="s-terr"><div class="section-title">Territorios operativos</div><div class="tag-cloud" id="terr-tags"></div></div>
+  <div class="section" id="s-exp"><div class="section-title">Ventajas competitivas declaradas</div><div class="tag-cloud" id="exp-tags"></div></div>
+  <div class="section" id="s-nodes"><div class="section-title">Nodos identificados — directorio de activación</div><div class="node-grid" id="node-grid"></div></div>
+  <div class="slider-section" id="s-magia">
+    <div class="section-title">Magia corporativa — Qué aporta cada nodo</div>
+    <div class="slider-track-wrap"><div class="slider-track" id="sliderTrack"></div></div>
+    <div class="slider-auto-bar"><div class="slider-auto-fill" id="sliderFill"></div></div>
+    <div class="slider-controls">
+      <div class="slider-dots" id="sliderDots"></div>
+      <span class="slider-counter" id="sliderCounter"></span>
+      <div class="slider-btns">
+        <button class="slider-btn" id="sliderPrev" aria-label="Anterior">&#8592;</button>
+        <button class="slider-btn" id="sliderNext" aria-label="Siguiente">&#8594;</button>
+      </div>
+    </div>
+  </div>
+  <div class="footer">
+    <div class="footer-text"><span class="pulse-dot"></span>Red activa · PDG-2026</div>
+    <img class="footer-logo" src="data:image/png;base64,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" alt="HYPHA">
+  </div>
+</div>
+<script>
+const sectors = [
+  { label: "Tecnología, IA y Servicios IT", count: 7, tip: "7 nodos en Tech & IA. Laura Carazo (Workoholics), Gustavo Santana (Amdocs), Mariola Terciado (Sacyr), Juanma Caballero (CIO) y otros." },
+  { label: "Banca, Seguros y Mercados de Capitales", count: 7, tip: "7 nodos en Banca. Santander (Olga Muñoz), Mapfre (Miguel Nieto), Línea Directa (Diego Ferreiro), ING (Ángeles) y otros." },
+  { label: "Infrastructure & Construction", count: 6, tip: "6 nodos en Infraestructura. Ferrovial (David Saiz), IDOM (Javier Fdez.), Serveo (Carlos Barriocanal), FYT (Enrique Capilla)." },
+  { label: "Industria y Automoción", count: 6, tip: "6 nodos industriales. Alfonso Fernández (CTO Loesche), Antonio Martínez Valverde, Javier Blanco (OCA Global)." },
+  { label: "Farma, Biotech y Salud", count: 5, tip: "5 nodos en Farma & Salud. María Santiago Coll (Takeda), Fátima Gonçalves (Strategic Ops) y perfiles anónimos." },
+  { label: "Logística, Aviación y Supply Chain", count: 3, tip: "3 nodos en Logística. Raquel Martinez (Serveo), Pablo Martínez Núñez (Iberia)." },
+  { label: "Retail, E-commerce y Gran Consumo", count: 2, tip: "2 nodos en Retail. Alberto Martínez Pagán (Lidl) con foco en operaciones y gestión de equipos." },
+  { label: "Energía, Renovables y Utilities", count: 2, tip: "2 nodos en Energía. Clara Alcaraz (Derecho regulatorio) y Luis Alberto Fdez (COO sector renovables)." },
+  { label: "Emprendimiento y Venture Building", count: 2, tip: "2 nodos de venture building en etapa de estructuración y escalado." },
+  { label: "Asuntos Públicos y Gobierno", count: 2, tip: "2 nodos en Asuntos Públicos. Mª Ángeles Muñoz (UFV), experta en reputación y relaciones público-privadas." },
+  { label: "M&A, Private Equity y Venture Capital", count: 2, tip: "2 nodos en M&A. José Manuel Pizarro (CFO) y Ana Rica Escuder (Group Company Secretary)." },
+  { label: "Family Office / Real Estate", count: 2, tip: "2 nodos de Family Office. Carlos A. Martínez (Maba/Bahmar) e Iñaki Caro Unsain." },
+  { label: "RRHH / Compensaciones y Beneficios", count: 1, tip: "Jaime Fontes Ramognino con expertise en compensación directiva y servicios IT." },
+  { label: "Servicios medioambientales", count: 1, tip: "1 nodo en gestión medioambiental y residuos con expertise en RRHH y desarrollo de talento." },
+  { label: "Arte Digital y Creación de Videojuegos", count: 1, tip: "1 nodo creativo con foco en deal-flow e inversión en proyectos creativos digitales." },
+  { label: "Commercial Real Estate", count: 1, tip: "1 nodo en Commercial & Corporate Real Estate con foco en P&L y operaciones." },
+  { label: "Agribusiness y FoodTech", count: 1, tip: "Rosa María Lozano (CEO CONUVA / Grupo Lozano). 4ª generación desde 1853." }
+];
+const priorities = [
+  { label: "Mentoring Sectorial", count: 18, cls: "", tip: "18 nodos necesitan mentores que han superado sus retos actuales. Prioridad #1 de la red." },
+  { label: "Strategic Headhunting", count: 18, cls: "", tip: "18 nodos buscan acceso a talento exclusivo bajo el radar. Empata con Mentoring." },
+  { label: "Executive Coaching 1a1", count: 14, cls: "g", tip: "14 nodos buscan sesiones 1a1 con expertos en liderazgo." },
+  { label: "Otro / Personalizado", count: 9, cls: "g", tip: "9 nodos con necesidades personalizadas: lobby normativo, cambio profesional, negocio internacional." },
+  { label: "Financial Advisory", count: 8, cls: "d", tip: "8 nodos necesitan validación de estructuras financieras por expertos." },
+  { label: "Venture Board", count: 7, cls: "d", tip: "7 nodos buscan crear un consejo asesor ad-hoc para su proyecto." },
+  { label: "Investment Deal-flow", count: 6, cls: "d", tip: "6 nodos quieren prioridad en rondas de inversión del ecosistema." }
+];
+const invest = [
+  { label: "Real Estate", count: 21, color: "#c9941a" },
+  { label: "Mercados de Valores", count: 21, color: "rgba(201,148,26,0.65)" },
+  { label: "Startups & Venture Capital", count: 17, color: "rgba(201,148,26,0.4)" },
+  { label: "Crypto / Coleccionables", count: 13, color: "rgba(201,148,26,0.22)" }
+];
+const commits = [
+  { label: "Medio", count: 24, tip: "24 nodos con compromiso medio. Participarán de forma selectiva." },
+  { label: "Alto", count: 14, tip: "14 nodos con compromiso alto. Listos para participar activamente." },
+  { label: "Sin datos", count: 12, tip: "12 submissions sin respuesta a la pregunta de compromiso." },
+  { label: "No participa", count: 1, tip: "1 nodo declina participar en el challenge por ahora." }
+];
+const agente = [
+  { label: "No — Necesito ayuda", count: 33, cls: "", tip: "33 nodos necesitan apoyo para usar el sistema Agente Edu. Gran oportunidad de onboarding colectivo." },
+  { label: "Sin respuesta", count: 12, cls: "d", tip: "12 submissions sin respuesta al System Check." },
+  { label: "Sí — Lo tengo dominado", count: 6, cls: "g", tip: "6 nodos dominan el sistema Agente Edu y pueden ayudar al resto." }
+];
+const territorios = [
+  { name: "Madrid (capital + área)", size: "lg", tip: "31 nodos operan desde Madrid y su área metropolitana — Boadilla, Leganés, Alcobendas. Territorio dominante." },
+  { name: "Bilbao", size: "", tip: "Laura Carazo (Workoholics) opera desde el País Vasco." },
+  { name: "Pamplona", size: "", tip: "Nodo activo en Navarra con expertise en Farma & Salud." },
+  { name: "Málaga", size: "", tip: "Antonio Martínez Valverde opera entre Madrid y Málaga." },
+  { name: "España / Francia", size: "", tip: "José Manuel Pizarro (CFO) opera entre España y Francia en M&A." },
+  { name: "Castilla-La Mancha", size: "", tip: "Rosa María Lozano (CONUVA) desde La Mancha y Rioja Alavesa." },
+  { name: "Sin dato", size: "sm", tip: "Algunos nodos no indicaron su territorio de operación." }
+];
+const expertise = [
+  { name: "Transformación con IA Nativa", size: "lg", tip: "Múltiples nodos con expertise en transformación digital e implementación de IA en negocio." },
+  { name: "Gestión de P&L y Turnaround", size: "lg", tip: "Alta demanda de perfiles con experiencia en cuenta de resultados y turnaround." },
+  { name: "Toma de decisiones en crisis", size: "lg", tip: "Expertise crítico en decisiones de alta presión, presente en varios sectores." },
+  { name: "Estrategia Legal, Regulatoria & ESG", size: "lg", tip: "Perfil legal y ESG muy valorado en sectores regulados y Banca." },
+  { name: "Escala Personas & Cultura", size: "lg", tip: "Competencia transversal con alta demanda para crecimiento de equipos y cultura." },
+  { name: "Ciberseguridad & IT Strategy", size: "", tip: "Juanma Caballero (CIO) aporta experiencia en tecnología y ciberseguridad a la red." },
+  { name: "Operaciones & Supply Chain", size: "", tip: "Optimización de procesos en entornos industriales y logísticos." },
+  { name: "Consumer Finance & Insurtech", size: "", tip: "Track récord de crecimiento y escalado en Fintech e Insurtech (Diego Ferreiro, Línea Directa)." },
+  { name: "Gestión del Talento & HR", size: "", tip: "Desarrollo de talento, métricas HR y workforce composition (Ángeles, ING)." },
+  { name: "Gobierno Corporativo", size: "", tip: "Auditoría, gobierno corporativo y decisiones en entidades financieras (Miguel Nieto, Mapfre)." },
+  { name: "M&A y Private Equity", size: "", tip: "Gobernanza de Consejos, Anti-Bribery y PBSA (Ana Rica Escuder)." },
+  { name: "Real Estate Internacional", size: "", tip: "Estructuración y gestión de activos inmobiliarios a nivel internacional." },
+  { name: "Estructuración Patrimonial", size: "", tip: "Gestión de patrimonio familiar e institucional a nivel internacional." },
+  { name: "Ingeniería Industrial", size: "", tip: "Proyectos a gran escala — Loesche, OCA Global, automoción." },
+  { name: "Calidad & Operaciones Farma", size: "", tip: "Gestión de calidad en Biotech, crisis y mejora continua (María Santiago Coll, Takeda)." },
+  { name: "Modelo Operativo & Escalado", size: "", tip: "Traducir visión estratégica compleja a modelo ejecutable (Fátima Gonçalves)." },
+  { name: "Branding & Comunicación", size: "", tip: "Estrategia de marca, UX y activos digitales para stakeholders." },
+  { name: "Derecho Público & Regulación", size: "sm", tip: "Sectores regulados y relaciones con organismos europeos (Clara Alcaraz)." },
+  { name: "VAT Compliance", size: "sm", tip: "Especialización en cumplimiento fiscal y VAT compliance en entornos Tech." },
+  { name: "Reaseguro", size: "sm", tip: "Expertise en reaseguro e impacto en personas y sociedad." },
+  { name: "Gastronomía & Agro", size: "sm", tip: "Sector agroalimentario desde la agricultura al mercado (Grupo Lozano, 1853)." }
+];
+const nodes = [
+  { name: "Carlos A. Martínez", role: "CEO · Maba/Bahmar", sector: "Family Office", tip: "Estructuración patrimonial internacional y Real Estate. Foco inversor: Real Estate y Crypto." },
+  { name: "Raquel Martínez", role: "Business Área Director · Serveo", sector: "Logística", tip: "Análisis complejo, toma de decisiones bajo presión, optimización de recursos." },
+  { name: "Enrique Capilla", role: "CEO · Fijaciones FYT", sector: "Construcción", tip: "20+ años en empresa familiar con relevo generacional. Experto en estructuras de acero." },
+  { name: "Jaime Fontes R.", role: "Garden Leave", sector: "RRHH & IT", tip: "Compensación directiva, consultoría IT y mantenimiento de clientes." },
+  { name: "Laura Carazo", role: "CEO · Workoholics", sector: "Tech & IT", tip: "17 años en empresa de servicios IT. Estrategia de marca, UX y activos digitales. Bilbao." },
+  { name: "Clara Alcaraz", role: "Abogada", sector: "Energía", tip: "Derecho público y sectores regulados. Red de contactos tiende a infinito." },
+  { name: "Alfonso Fernández", role: "CTO · Loesche", sector: "Industria", tip: "Proyectos industriales a gran escala. Ingeniería pesada y planta industrial." },
+  { name: "Gustavo Santana", role: "Head Global BU · Amdocs", sector: "Tech & IA", tip: "Liderazgo, escalado de equipos, eficiencia operativa y casos de IA." },
+  { name: "Iñaki Caro Unsain", role: "Consultoría Family Office", sector: "Family Office", tip: "Visión estratégica M/L plazo. Empresa familiar, derecho, sector hotelero." },
+  { name: "Olga Muñoz", role: "COO Transf. · Santander", sector: "Banca", tip: "COO transformación Global Markets Santander. 20 años en banca." },
+  { name: "Mariola Terciado", role: "BP TIC · Sacyr Agua", sector: "Tech & IT", tip: "Plan de acción digital. Mentoring de carrera profesional." },
+  { name: "Mª Ángeles Muñoz", role: "Dir. Escuela Gobierno UFV", sector: "Asuntos Públ.", tip: "Reputación, crisis nacional, relaciones público-privadas e internacionalización." },
+  { name: "Marta Pérez", role: "Dir. Asesoría Jurídica", sector: "Banca", tip: "Litigación civil/mercantil en entidad financiera." },
+  { name: "José M. Pizarro", role: "CFO", sector: "M&A / PE", tip: "Excelencia, discreción absoluta, preparación rigurosa. España y Francia." },
+  { name: "David Saiz", role: "Head Procurement · Ferrovial", sector: "Infraestructura", tip: "Global Head of Procurement Ferrovial. Honestidad y amabilidad para dar y tomar." },
+  { name: "Javier Fdez. Gómez", role: "Water Director · IDOM", sector: "Infraestructura", tip: "Ingeniería en diversos sectores con foco en proyectos de agua." },
+  { name: "Miguel Nieto", role: "Dir. Auditoría · Mapfre", sector: "Banca", tip: "Criterio, rigor y síntesis en gobierno corporativo y auditoría." },
+  { name: "Antonio Martínez V.", role: "Industria / Automoción", sector: "Industria", tip: "Reducción costes operativos, supply chain, prototypes en clay." },
+  { name: "Carlos Barriocanal", role: "Head Bidding · Serveo", sector: "Infraestructura", tip: "Mantenimiento de infraestructuras y licitaciones públicas." },
+  { name: "Luis Alberto Fdez", role: "COO", sector: "Energía", tip: "Sector renovables con foco en P&L y operaciones." },
+  { name: "Rosa M. Lozano", role: "CEO · CONUVA (Grupo Lozano)", sector: "Agri & Food", tip: "4ª generación desde 1853. Zumos y concentrados en La Mancha y Rioja Alavesa." },
+  { name: "Pablo Martínez N.", role: "Verificador · Iberia D.Ops", sector: "Logística", tip: "Retos y estructuración. Guitarra y música rock en directo." },
+  { name: "Ana Rica Escuder", role: "Group Company Secretary", sector: "M&A / PE", tip: "Gobernanza de Consejos, Anti-Bribery, PBSA & flexliving, M&A corporativo." },
+  { name: "Diego Ferreiro", role: "CCO · Línea Directa", sector: "Banca", tip: "Consumer Finance y Seguros. Track récord en escalado de proyectos nuevos." },
+  { name: "Alberto Martínez P.", role: "Dir. Ops NonFood · Lidl", sector: "Retail", tip: "Distribución y gestión de equipos. Enología y gastronomía." },
+  { name: "Ángeles", role: "Head Talent & Learning · ING", sector: "Banca", tip: "Carrera, empleabilidad, métricas HR, workforce composition. Montaña y ópera." },
+  { name: "Javier Blanco V.", role: "Dir. División · OCA Global", sector: "Industria", tip: "Consultoría sobre desarrollo y crecimiento de negocio." },
+  { name: "María Santiago Coll", role: "Dir. Calidad · Takeda", sector: "Farma", tip: "Gestión de calidad en Farma Biotech. Crisis, toma de decisión, mejora continua." },
+  { name: "Fátima Gonçalves", role: "Strategic Operations Lead", sector: "Farma", tip: "Aterriza visión estratégica compleja en modelo operativo ejecutable y escalable." },
+  { name: "Juanma Caballero", role: "CIO", sector: "Tech & IT", tip: "Gran experiencia en tecnología y ciberseguridad. Nuevo nodo incorporado esta semana." }
+];
+const magiaData = [
+  { text: "Conocimiento del sector Farma, la medicina.", nombre: "Nodo anónimo", empresa: "", sector: "Farma & Salud" },
+  { text: "Real Estate Internacional. Gestión patrimonial internacional.", nombre: "Carlos Andrés Martinez", empresa: "Maba/Bahmar", sector: "Family Office" },
+  { text: "Optimización de procesos y de recursos humanos, toma de decisiones en situaciones complejas y de alta criticidad, pensamiento crítico, análisis complejo.", nombre: "Raquel Martinez", empresa: "Business Área Director · Serveo", sector: "Logística" },
+  { text: "Profesionalmente más de 20 años implicado en la gestión de una empresa familiar incluyendo un relevo generacional con dificultades pero con éxito. Experto en cálculo de estructuras de acero y envolventes de edificios industriales. Deportes de nieve, agua, moto, bici, música rock cañero…", nombre: "Enrique Capilla", empresa: "CEO @ Fijaciones FYT", sector: "Construcción" },
+  { text: "Podría ayudar en todos los temas relacionados con compensación, tanto del directivo como de los equipos. Tengo mucho expertise también en crear y comercializar servicios profesionales de consultoría y de IT, así como de mantenimiento y explotación de clientes.", nombre: "Jaime Fontes Ramognino", empresa: "Garden Leave", sector: "RRHH & IT" },
+  { text: "He creado una empresa de servicios hace 17 años y puedo acompañarte en tu proceso de emprendizaje. He trabajado en estrategia de marca, experiencia UX y diseño y desarrollo de activos digitales que conectan tu proyecto con los distintos stakeholders. Me gusta la montaña, el ski, la bici…", nombre: "Laura Carazo", empresa: "Workoholics, CEO", sector: "Tech & IT" },
+  { text: "Soy experta en derecho público y sectores regulados y me chifla viajar. Mi red de contactos tiende a infinito y soy bastante buena conectando al personal.", nombre: "Clara Alcaraz", empresa: "Abogada", sector: "Energía" },
+  { text: "Te puedo aportar asesores y estudios de calidad científicos. Puedes confiar en mi persona porque no te voy a fallar.", nombre: "Nodo anónimo", empresa: "", sector: "Farma & Salud" },
+  { text: "Te asesoro sobre proyectos industriales a gran escala, y me tomo unas cañas contigo.", nombre: "Alfonso Fernández", empresa: "CTO @ Loesche", sector: "Industria" },
+  { text: "Gestión de RRHH, gestión del cambio, reenfoque de carrera, desarrollo de talento.", nombre: "Nodo anónimo", empresa: "", sector: "Medio Ambiente" },
+  { text: "Análisis complejo, toma de decisiones bajo presión, optimización de recursos, relación con clientes.", nombre: "Raquel Martinez", empresa: "Business Área Director · Serveo", sector: "Logística" },
+  { text: "Liderazgo, escalar equipos y cultura. Dirección de operaciones en proyectos tecnológicos. Eficiencia operativa, transformación digital de la cadena de valor. Definición e implementación de casos concretos con IA.", nombre: "Gustavo Santana", empresa: "Head of Global BU @ Amdocs", sector: "Tech & IA" },
+  { text: "Mirada a medio y largo plazo, con una visión estratégica. Conocimiento de la empresa familiar. Formación jurídica. Conocimiento del sector hotelero. Gran aficionado a la cocina/gastronomía y al ciclismo.", nombre: "Iñaki Caro Unsain", empresa: "Consultoría Family Office", sector: "Family Office" },
+  { text: "Aporto 20 años de experiencia en banca, con una visión muy completa de negocio, riesgo y operaciones. He liderado proyectos y equipos desde cero, convirtiendo ideas complejas en estructuras que funcionan y escalan. Me muevo bien entre estrategia y ejecución.", nombre: "Olga Muñoz", empresa: "COO transformación Global Markets · Santander", sector: "Banca" },
+  { text: "Te hago un plan de acción digital. Experiencia en ayudar a compañeros a enfocar su carrera profesional. Mentorizo niños en edad escolar. Familiarizada con procesos de acceso a universidades fuera de España.", nombre: "Mariola Terciado", empresa: "BP TIC SACYR AGUA", sector: "Tech & IT" },
+  { text: "Reducción de costes operativos, organización de la producción o del supply chain. Prototype en clay. Cortes o secciones de motores, piezas o vehículos completos.", nombre: "Antonio Martínez Valverde", empresa: "Industria y Automoción", sector: "Industria" },
+  { text: "Mantenimiento de infraestructuras y contratación de licitaciones públicas.", nombre: "Carlos Barriocanal Garcia", empresa: "Head of Bidding · SERVEO", sector: "Infraestructura" },
+  { text: "Te ofrezco ayuda con tus proyectos de ingeniería, y fuera nos tomamos unas cañas.", nombre: "Alfonso Fernández", empresa: "CTO @ Loesche", sector: "Industria" },
+  { text: "Excelente en la captación del valor diferencial de las organizaciones. Experta en gestión de crisis a nivel nacional. Consolido partners estratégicos mediante relaciones de confianza sólidas. Identifico rápidamente oportunidades y también grietas.", nombre: "Mª Ángeles Muñoz Martínez", empresa: "Dir. Escuela de Gobierno y Liderazgo (UFV)", sector: "Asuntos Públicos" },
+  { text: "Gestionar escenarios de litigación civil/mercantil. Organización y retos de una asesoría jurídica de entidad financiera.", nombre: "Marta Pérez", empresa: "Directora Asesoría Jurídica", sector: "Banca" },
+  { text: "Compromiso por buscar la excelencia en mi parte, discreción absoluta en los temas tratados, preparación previa rigurosa, seguimiento detallado.", nombre: "José Manuel Pizarro", empresa: "CFO", sector: "M&A / PE" },
+  { text: "Mi experiencia dentro de un grupo grande puede servir para otros compañeros. Siempre honestidad, sinceridad y amabilidad para dar y tomar.", nombre: "David Saiz", empresa: "Ferrovial - Global Head of Procurement", sector: "Infraestructura" },
+  { text: "Experiencia en ingeniería en diversos sectores.", nombre: "Javier Fernández Gómez", empresa: "Water Director at IDOM", sector: "Infraestructura" },
+  { text: "Aporto criterio, rigor y capacidad de síntesis para temas complejos: gobierno corporativo, auditoría y toma de decisiones. Me gusta ordenar problemas, bajar a tierra lo técnico y ayudar a que se decida bien.", nombre: "Miguel Nieto", empresa: "Mapfre Director Auditoría Financiera", sector: "Banca" },
+  { text: "Sector de las renovables en general. Baloncesto y padel fuera del trabajo.", nombre: "Luis Alberto Fdez", empresa: "COO", sector: "Energía" },
+  { text: "Visión 360º del sector alimentación y bebidas, desde la agricultura hasta el mercado, combinando legado (4ª generación, 1853) e innovación. CEO de la planta de zumos y concentrados de uva en La Mancha y Rioja Alavesa.", nombre: "Rosa María Lozano Aroca", empresa: "CEO · CONUVA (Grupo Lozano)", sector: "Agri & Food" },
+  { text: "Me gustan los retos y el ayudar a estructurarlos. Desde la experiencia incluso a veces me atrevo a dar consejos. Me gusta la guitarra y escuchar música rock en directo.", nombre: "Pablo Martínez Núñez", empresa: "Iberia, verificador D.Ops", sector: "Logística" },
+  { text: "Profesionalización de start-ups. Diseño de estrategia de riesgos. Gobernanza de Consejos de Administración, Comités y corporaciones. Compliance y Anti-Bribery en private equity. M&A corporativo y real estate. PBSA & flexliving. Y si os interesan los caballos, también puedo hacer alguna recomendación.", nombre: "Ana Rica Escuder", empresa: "Group Company Secretary", sector: "M&A / PE" },
+  { text: "Experto en Consumer Finance y Seguros, con track récord de crecimiento, escalado de proyectos nuevos y transformación del modelo de negocio. Visión estratégica y conocimiento E2E de la compañía.", nombre: "Diego Ferreiro", empresa: "CCO en Línea Directa", sector: "Banca" },
+  { text: "Amplia experiencia en el sector de la distribución y en la gestión de equipos. Me gusta viajar, enología y gastronomía.", nombre: "Alberto Martínez Pagán", empresa: "Dir. de Operaciones NonFood, Lidl", sector: "Retail" },
+  { text: "Te acompaño en cómo gestionar tu carrera y mantener tu empleabilidad atractiva. Para tu empresa: desarrollo de talento, métricas de HR, workforce composition. Me gusta la montaña y la ópera.", nombre: "Ángeles", empresa: "ING - Head Talent & Learning", sector: "Banca" },
+  { text: "Te cuento sobre el Reaseguro y el impacto en personas y sociedad.", nombre: "Nodo anónimo", empresa: "", sector: "Banca" },
+  { text: "Consultoría sobre desarrollo y crecimiento de negocio.", nombre: "Javier Blanco Velázquez", empresa: "OCA Global - Director de División", sector: "Industria" },
+  { text: "Ocupo una posición de dirección de Calidad en Farma Biotech. Soy buena en gestión de crisis, tomas de decisión, mejora continua y gestión de equipos en entornos de alta regulación.", nombre: "María Santiago Coll", empresa: "Directora de Calidad en Takeda", sector: "Farma" },
+  { text: "Te ayudo a aterrizar una visión estratégica compleja en un modelo operativo ejecutable y escalable. Fuera de la oficina, soy curiosa, viajera y amante de la buena mesa.", nombre: "Fátima Gonçalves", empresa: "Strategic Operations Lead", sector: "Farma" },
+  { text: "Te estructuro problemas de difícil solución. Propuestas de valor en mercados de gran consumo.", nombre: "Nodo anónimo", empresa: "", sector: "Gran Consumo" },
+  { text: "Tengo una gran experiencia en todo el ámbito de tecnología y ciberseguridad.", nombre: "Juanma Caballero", empresa: "CIO", sector: "Tech & IT" }
+];
+
+// ── TOOLTIP ──
+const tipEl = document.getElementById('tooltip');
+let tipTimer;
+function showTip(e, html) { clearTimeout(tipTimer); tipEl.innerHTML = html; tipEl.classList.add('show'); moveTip(e); }
+function moveTip(e) {
+  const x = e.clientX + 14, y = e.clientY - 10;
+  const w = tipEl.offsetWidth, h = tipEl.offsetHeight;
+  tipEl.style.left = (x + w > window.innerWidth - 10 ? x - w - 28 : x) + 'px';
+  tipEl.style.top = (y + h > window.innerHeight - 10 ? y - h + 20 : y) + 'px';
+}
+function hideTip() { tipTimer = setTimeout(() => tipEl.classList.remove('show'), 100); }
+document.addEventListener('mousemove', e => { if (tipEl.classList.contains('show')) moveTip(e); });
+function addTip(el, html) {
+  el.addEventListener('mouseenter', e => showTip(e, html));
+  el.addEventListener('mousemove', moveTip);
+  el.addEventListener('mouseleave', hideTip);
+  el.addEventListener('click', e => { showTip(e, html); e.stopPropagation(); });
+}
+document.addEventListener('click', hideTip);
+
+// ── BARS ──
+function renderBars(id, data, maxVal) {
+  const el = document.getElementById(id);
+  data.forEach(d => {
+    const pct = Math.round((d.count / maxVal) * 100);
+    const row = document.createElement('div');
+    row.className = 'bar-row';
+    row.innerHTML = '<span class="bar-label" title="' + d.label + '">' + d.label + '</span><div class="bar-track"><div class="bar-fill ' + (d.cls||'') + '" data-pct="' + pct + '" style="width:0%"></div></div><span class="bar-count">' + d.count + '</span>';
+    el.appendChild(row);
+    if (d.tip) addTip(row, '<strong>' + d.label + '</strong>' + d.tip);
+  });
+}
+renderBars('sector-bars', sectors, sectors[0].count);
+renderBars('prio-bars', priorities, priorities[0].count);
+renderBars('agente-bars', agente, agente[0].count);
+
+// ── DONUT ──
+(function() {
+  const svg = document.getElementById('donut-svg');
+  const legend = document.getElementById('donut-legend');
+  const total = invest.reduce((s, d) => s + d.count, 0);
+  const cx = 65, cy = 65, r = 48, ir = 30;
+  let angle = -Math.PI / 2;
+  invest.forEach((d, i) => {
+    const slice = (d.count / total) * Math.PI * 2;
+    const x1 = cx + r * Math.cos(angle), y1 = cy + r * Math.sin(angle);
+    angle += slice;
+    const x2 = cx + r * Math.cos(angle), y2 = cy + r * Math.sin(angle);
+    const xi1 = cx + ir * Math.cos(angle), yi1 = cy + ir * Math.sin(angle);
+    const xi2 = cx + ir * Math.cos(angle - slice), yi2 = cy + ir * Math.sin(angle - slice);
+    const lg = slice > Math.PI ? 1 : 0;
+    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    path.setAttribute('d', 'M ' + x1 + ' ' + y1 + ' A ' + r + ' ' + r + ' 0 ' + lg + ' 1 ' + x2 + ' ' + y2 + ' L ' + xi1 + ' ' + yi1 + ' A ' + ir + ' ' + ir + ' 0 ' + lg + ' 0 ' + xi2 + ' ' + yi2 + ' Z');
+    path.setAttribute('fill', d.color); path.setAttribute('stroke', '#0e0d0b'); path.setAttribute('stroke-width', '2');
+    path.style.cssText = 'cursor:pointer;transition:opacity 0.2s;opacity:0';
+    setTimeout(() => { path.style.opacity = '1'; }, 400 + i * 120);
+    addTip(path, '<strong>' + d.label + '</strong>' + d.count + ' nodos · ' + Math.round(d.count/total*100) + '% de preferencias inversoras');
+    svg.appendChild(path);
+    const pct = Math.round(d.count / total * 100);
+    const row = document.createElement('div'); row.className = 'legend-row';
+    row.innerHTML = '<span class="legend-dot" style="background:' + d.color + '"></span>' + d.label + '<span class="legend-pct">' + pct + '%</span>';
+    addTip(row, '<strong>' + d.label + '</strong>' + d.count + ' nodos (' + pct + '% del total).');
+    legend.appendChild(row);
+  });
+  const txt = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+  txt.setAttribute('x', cx); txt.setAttribute('y', cy + 5); txt.setAttribute('text-anchor', 'middle');
+  txt.setAttribute('font-size', '11'); txt.setAttribute('fill', 'rgba(232,224,204,0.35)'); txt.setAttribute('font-family', 'Inter,sans-serif');
+  txt.textContent = total; svg.appendChild(txt);
+})();
+
+// ── COMMIT ──
+(function() {
+  const el = document.getElementById('commit-bars');
+  const maxC = Math.max(...commits.map(d => d.count));
+  commits.forEach(d => {
+    const col = document.createElement('div'); col.className = 'commit-col';
+    col.innerHTML = '<div class="commit-bar-wrap"><div class="commit-bar" data-h="' + Math.round((d.count/maxC)*52) + '" style="height:0px"></div></div><div class="commit-num">' + d.count + '</div><div class="commit-lbl">' + d.label + '</div>';
+    el.appendChild(col);
+    addTip(col, '<strong>' + d.label + '</strong>' + d.tip);
+  });
+})();
+
+// ── TAGS ──
+function renderTags(id, data) {
+  const el = document.getElementById(id);
+  data.forEach(t => {
+    const span = document.createElement('span');
+    span.className = 'tag ' + (t.size||'');
+    span.textContent = t.name;
+    if (t.tip) addTip(span, '<strong>' + t.name + '</strong>' + t.tip);
+    el.appendChild(span);
+  });
+}
+renderTags('terr-tags', territorios);
+renderTags('exp-tags', expertise);
+
+// ── NODES ──
+(function() {
+  const el = document.getElementById('node-grid');
+  nodes.forEach(n => {
+    const card = document.createElement('div'); card.className = 'node-card';
+    card.innerHTML = '<div class="node-name">' + n.name + '</div><div class="node-role">' + n.role + '</div><span class="node-badge">' + n.sector + '</span>';
+    addTip(card, '<strong>' + n.name + '</strong>' + n.tip);
+    el.appendChild(card);
+  });
+})();
+
+// ── SLIDER ──
+(function() {
+  const track = document.getElementById('sliderTrack');
+  const dotsEl = document.getElementById('sliderDots');
+  const counterEl = document.getElementById('sliderCounter');
+  const fillEl = document.getElementById('sliderFill');
+  const prevBtn = document.getElementById('sliderPrev');
+  const nextBtn = document.getElementById('sliderNext');
+  const AUTO = 6000;
+  let current = 0, autoTimer = null;
+
+  magiaData.forEach((d, i) => {
+    const initials = d.nombre === 'Nodo anónimo' ? '?' : d.nombre.split(' ').slice(0,2).map(w=>w[0]).join('').toUpperCase();
+    const slide = document.createElement('div'); slide.className = 'slide';
+    slide.innerHTML = '<div class="slide-text">' + d.text + '</div><div class="slide-author"><div class="slide-avatar">' + initials + '</div><div><div class="slide-name">' + d.nombre + '</div><div class="slide-role">' + (d.empresa||d.sector) + '</div></div><span class="slide-sector">' + d.sector + '</span></div>';
+    track.appendChild(slide);
+    const dot = document.createElement('button'); dot.className = 'slider-dot' + (i===0?' active':'');
+    dot.addEventListener('click', () => goTo(i));
+    dotsEl.appendChild(dot);
+  });
+
+  function updateUI() {
+    track.style.transform = 'translateX(-' + (current * 100) + '%)';
+    document.querySelectorAll('.slider-dot').forEach((d,i) => d.classList.toggle('active', i===current));
+    counterEl.textContent = (current+1) + ' / ' + magiaData.length;
+  }
+  function startFill() {
+    fillEl.style.transition = 'none'; fillEl.style.width = '0%';
+    requestAnimationFrame(() => requestAnimationFrame(() => { fillEl.style.transition = 'width ' + AUTO + 'ms linear'; fillEl.style.width = '100%'; }));
+  }
+  function startAuto() { clearInterval(autoTimer); startFill(); autoTimer = setInterval(() => { current=(current+1)%magiaData.length; updateUI(); startFill(); }, AUTO); }
+  function goTo(i) { current=i; updateUI(); startAuto(); }
+
+  prevBtn.addEventListener('click', () => { current=(current-1+magiaData.length)%magiaData.length; updateUI(); startAuto(); });
+  nextBtn.addEventListener('click', () => { current=(current+1)%magiaData.length; updateUI(); startAuto(); });
+
+  let tx=0;
+  track.addEventListener('touchstart', e => { tx=e.touches[0].clientX; }, {passive:true});
+  track.addEventListener('touchend', e => { const dx=e.changedTouches[0].clientX-tx; if(Math.abs(dx)>50){current=dx<0?(current+1)%magiaData.length:(current-1+magiaData.length)%magiaData.length; updateUI(); startAuto();} });
+
+  const obs = new IntersectionObserver(entries => {
+    if(entries[0].isIntersecting){ document.getElementById('s-magia').classList.add('visible'); updateUI(); startAuto(); obs.disconnect(); }
+  }, {threshold:0.15});
+  obs.observe(document.getElementById('s-magia'));
+})();
+
+// ── SCROLL OBSERVER ──
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(entry => {
+    if(!entry.isIntersecting) return;
+    const el = entry.target;
+    el.classList.add('visible');
+    el.querySelectorAll('.bar-fill').forEach((b,i) => setTimeout(()=>{ b.style.width=b.dataset.pct+'%'; }, i*60));
+    el.querySelectorAll('.commit-bar').forEach((b,i) => setTimeout(()=>{ b.style.height=b.dataset.h+'px'; }, i*80+100));
+    el.querySelectorAll('.tag').forEach((t,i) => setTimeout(()=>t.classList.add('visible'), i*40+100));
+    el.querySelectorAll('.node-card').forEach((c,i) => setTimeout(()=>c.classList.add('visible'), i*35));
+    observer.unobserve(el);
+  });
+}, {threshold:0.12});
+document.querySelectorAll('.section').forEach(s => observer.observe(s));
+
+// ── KPI COUNT UP ──
+document.querySelectorAll('.kpi-num[data-target]').forEach((el, i) => {
+  const target = +el.dataset.target;
+  const t = el.closest('.kpi-cell') && el.closest('.kpi-cell').dataset.tip;
+  if(t) addTip(el.closest('.kpi-cell'), '<strong>' + (el.nextElementSibling ? el.nextElementSibling.textContent : '') + '</strong>' + t);
+  setTimeout(() => {
+    let cur=0; const step=Math.ceil(target/30);
+    const iv=setInterval(()=>{ cur=Math.min(cur+step,target); el.textContent=cur; if(cur>=target)clearInterval(iv); },40);
+  }, 300+i*120);
+});
+
+</script>
+</body>
+</html>
