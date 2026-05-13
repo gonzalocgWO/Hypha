@@ -1,0 +1,1639 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hypha — Prototipo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --yellow: #F2C94C;
+    --yellow-dim: rgba(242,201,76,0.12);
+    --yellow-mid: rgba(242,201,76,0.2);
+    --bg: #1C1C1E;
+    --surface: #242426;
+    --card: #2A2A2C;
+    --card2: #2E2E30;
+    --border: #333;
+    --border2: #2A2A2C;
+    --text: #F5F5F0;
+    --text-sec: #D0D0C8;
+    --text-muted: #888;
+    --text-dim: #555;
+    --text-dark: #444;
+    --green: #4CAF7D;
+    --red: #E05A5A;
+    --font-head: 'Barlow Condensed', sans-serif;
+    --font-body: 'Inter', sans-serif;
+    --r: 18px;
+    --r-sm: 12px;
+    --r-xs: 8px;
+  }
+
+  html, body {
+    height: 100%;
+    background: var(--bg);
+    font-family: var(--font-body);
+    color: var(--text);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ─── LAYOUT ─────────────────────────────────────────────── */
+  .app-shell {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 40px 20px;
+    background: var(--bg);
+  }
+
+  .phone-frame {
+    width: 390px;
+    height: 844px;
+    background: var(--surface);
+    border-radius: 48px;
+    border: 1.5px solid var(--border);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    box-shadow: 0 40px 80px rgba(0,0,0,0.6);
+  }
+
+  /* status bar */
+  .status-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 28px 0;
+    flex-shrink: 0;
+  }
+  .status-time {
+    font-family: var(--font-head);
+    font-size: 15px; font-weight: 700;
+    color: var(--text);
+  }
+  .status-icons { display: flex; gap: 6px; align-items: center; }
+  .status-icons i { font-size: 14px; color: var(--text); }
+
+  /* notch */
+  .notch {
+    width: 120px; height: 34px;
+    background: #111;
+    border-radius: 0 0 20px 20px;
+    margin: 0 auto 0;
+    flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .notch-cam {
+    width: 12px; height: 12px;
+    border-radius: 50%; background: #1A1A1A;
+    border: 1px solid #2A2A2A;
+  }
+
+  .topbar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 24px 10px;
+    flex-shrink: 0;
+  }
+  .topbar-title {
+    font-family: var(--font-head);
+    font-size: 28px; font-weight: 800;
+    color: var(--text); text-transform: uppercase;
+    letter-spacing: -0.3px;
+  }
+  .topbar-back {
+    display: flex; align-items: center; gap: 8px;
+    cursor: pointer;
+  }
+  .topbar-back i { font-size: 20px; color: var(--text-dim); }
+
+  .tk-chip {
+    display: flex; align-items: center; gap: 6px;
+    background: var(--yellow); border-radius: 20px;
+    padding: 5px 14px;
+    font-family: var(--font-body); font-size: 12px; font-weight: 700;
+    color: #1A1A1A;
+  }
+  .tk-dot { width: 6px; height: 6px; border-radius: 50%; background: rgba(0,0,0,0.3); }
+
+  .screen-body {
+    flex: 1; overflow-y: auto; overflow-x: hidden;
+    scrollbar-width: none;
+  }
+  .screen-body::-webkit-scrollbar { display: none; }
+
+  /* ─── BOTTOM NAV ──────────────────────────────────────────── */
+  .bottom-nav {
+    display: flex;
+    border-top: 1px solid var(--card2);
+    padding: 10px 0 24px;
+    background: var(--surface);
+    flex-shrink: 0;
+  }
+  .nav-item {
+    flex: 1; display: flex; flex-direction: column;
+    align-items: center; gap: 3px;
+    font-family: var(--font-body); font-size: 10px; font-weight: 500;
+    color: var(--text-dim); cursor: pointer;
+    transition: color 0.2s;
+  }
+  .nav-item i { font-size: 22px; }
+  .nav-item.active { color: var(--yellow); }
+  .nav-item:hover { color: var(--text-muted); }
+
+  /* ─── SEARCH ──────────────────────────────────────────────── */
+  .search-bar {
+    margin: 8px 20px 12px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--r-sm);
+    padding: 11px 16px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .search-bar i { font-size: 16px; color: var(--text-dim); }
+  .search-bar span { font-family: var(--font-body); font-size: 13px; color: var(--text-dim); }
+
+  /* ─── CATEGORIES ──────────────────────────────────────────── */
+  .cats {
+    display: flex; gap: 8px;
+    padding: 0 20px 14px;
+    overflow-x: auto; scrollbar-width: none;
+  }
+  .cats::-webkit-scrollbar { display: none; }
+  .cat {
+    font-family: var(--font-body); font-size: 12px; font-weight: 500;
+    padding: 6px 14px; border-radius: 20px; white-space: nowrap;
+    border: 1px solid var(--border); color: var(--text-muted);
+    background: transparent; cursor: pointer;
+    transition: all 0.2s;
+  }
+  .cat.active { background: var(--yellow); color: #1A1A1A; border-color: var(--yellow); font-weight: 700; }
+  .cat:hover:not(.active) { border-color: var(--text-dim); color: var(--text-sec); }
+
+  /* ─── SKILL CARDS ─────────────────────────────────────────── */
+  .skill-card {
+    margin: 0 18px 10px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--r);
+    padding: 16px;
+    cursor: pointer;
+    transition: border-color 0.2s, transform 0.15s;
+  }
+  .skill-card:hover { border-color: var(--yellow); transform: translateY(-1px); }
+  .skill-card.featured { background: var(--yellow); border-color: var(--yellow); }
+
+  .sk-user-row {
+    display: flex; align-items: center; gap: 10px; margin-bottom: 10px;
+  }
+  .avatar {
+    width: 34px; height: 34px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-body); font-size: 11px; font-weight: 700;
+    flex-shrink: 0;
+  }
+  .user-name { font-family: var(--font-body); font-size: 12px; font-weight: 600; color: var(--text-sec); }
+  .user-name.dark { color: #1A1A1A; }
+  .user-loc { font-family: var(--font-body); font-size: 10px; color: var(--text-dim); }
+  .user-loc.dark { color: rgba(0,0,0,0.4); }
+  .verified {
+    margin-left: auto; width: 18px; height: 18px; border-radius: 50%;
+    background: #1A1A1A; display: flex; align-items: center; justify-content: center;
+  }
+  .verified i { font-size: 11px; color: var(--yellow); }
+  .verified.dk { background: rgba(0,0,0,0.15); }
+  .verified.dk i { color: #1A1A1A; }
+
+  .sk-title {
+    font-family: var(--font-head); font-size: 16px; font-weight: 700;
+    color: var(--text); text-transform: uppercase; line-height: 1.2;
+    margin-bottom: 5px;
+  }
+  .sk-title.dark { color: #1A1A1A; }
+  .sk-desc { font-family: var(--font-body); font-size: 11px; color: var(--text-dim); line-height: 1.5; margin-bottom: 10px; }
+  .sk-desc.dark { color: rgba(0,0,0,0.45); }
+
+  .tags { display: flex; gap: 5px; flex-wrap: wrap; margin-bottom: 10px; }
+  .tag {
+    font-family: var(--font-body); font-size: 10px; font-weight: 600;
+    padding: 3px 9px; border-radius: var(--r-xs);
+  }
+  .tag-y { background: var(--yellow-dim); color: var(--yellow); }
+  .tag-n { background: var(--card2); color: var(--text-muted); }
+  .tag-dk { background: rgba(0,0,0,0.12); color: rgba(0,0,0,0.5); }
+
+  .sk-footer {
+    display: flex; align-items: center; justify-content: space-between;
+    border-top: 1px solid var(--border2); padding-top: 10px;
+  }
+  .sk-footer.dark { border-top-color: rgba(0,0,0,0.12); }
+  .price-label {
+    font-family: var(--font-body); font-size: 12px; font-weight: 600;
+    color: var(--yellow); display: flex; align-items: center; gap: 4px;
+  }
+  .price-label.dark { color: #1A1A1A; }
+  .price-label i { font-size: 13px; }
+  .btn-request {
+    background: var(--yellow); color: #1A1A1A;
+    border: none; border-radius: var(--r-xs); padding: 7px 14px;
+    font-family: var(--font-body); font-size: 11px; font-weight: 700;
+    cursor: pointer; transition: opacity 0.2s;
+  }
+  .btn-request:hover { opacity: 0.88; }
+  .btn-request.dark { background: #1A1A1A; color: var(--yellow); }
+
+  /* ─── SECTION LABEL ───────────────────────────────────────── */
+  .sec-lbl {
+    font-family: var(--font-body); font-size: 10px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.1em;
+    color: var(--text-dim); padding: 4px 22px 8px;
+  }
+
+  /* ─── PROFILE ─────────────────────────────────────────────── */
+  .profile-hero {
+    padding: 20px 22px 16px;
+    border-bottom: 1px solid var(--card2);
+  }
+  .profile-top { display: flex; align-items: center; gap: 16px; margin-bottom: 14px; }
+  .profile-av {
+    width: 64px; height: 64px; border-radius: 50%;
+    border: 2.5px solid var(--yellow);
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-head); font-size: 22px; font-weight: 800;
+    color: var(--yellow); background: var(--yellow-dim);
+  }
+  .profile-name {
+    font-family: var(--font-head); font-size: 22px; font-weight: 800;
+    color: var(--text); text-transform: uppercase; line-height: 1; margin-bottom: 4px;
+  }
+  .profile-role { font-family: var(--font-body); font-size: 11px; color: var(--text-dim); }
+  .profile-stats {
+    display: flex; background: var(--card2); border-radius: var(--r-sm);
+    overflow: hidden; border: 1px solid var(--border);
+  }
+  .pstat { flex: 1; padding: 10px 0; text-align: center; border-right: 1px solid var(--border); }
+  .pstat:last-child { border-right: none; }
+  .pstat-n {
+    font-family: var(--font-head); font-size: 20px; font-weight: 800; color: var(--yellow);
+  }
+  .pstat-l { font-family: var(--font-body); font-size: 9px; color: var(--text-dim); margin-top: 2px; }
+
+  .skill-row {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 22px; border-bottom: 1px solid var(--card2);
+    cursor: pointer; transition: background 0.15s;
+  }
+  .skill-row:hover { background: var(--card2); }
+  .skill-ico {
+    width: 36px; height: 36px; border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; flex-shrink: 0;
+  }
+  .skill-info { flex: 1; min-width: 0; }
+  .skill-name { font-family: var(--font-body); font-size: 12px; font-weight: 600; color: var(--text-sec); margin-bottom: 2px; }
+  .skill-meta { font-family: var(--font-body); font-size: 10px; color: var(--text-dim); }
+  .skill-rate { font-family: var(--font-head); font-size: 16px; font-weight: 700; color: var(--yellow); }
+
+  .tx-row {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 22px; border-bottom: 1px solid var(--card2);
+  }
+  .tx-ico {
+    width: 32px; height: 32px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 15px; flex-shrink: 0;
+  }
+  .tx-name { font-family: var(--font-body); font-size: 12px; font-weight: 600; color: var(--text-sec); }
+  .tx-meta { font-family: var(--font-body); font-size: 10px; color: var(--text-dim); }
+  .tx-amt-in { font-family: var(--font-head); font-size: 16px; font-weight: 700; color: var(--green); }
+  .tx-amt-out { font-family: var(--font-head); font-size: 16px; font-weight: 700; color: var(--red); }
+  .tx-amt-bonus { font-family: var(--font-head); font-size: 16px; font-weight: 700; color: var(--yellow); }
+  .tx-type { font-family: var(--font-body); font-size: 9px; color: var(--text-dim); text-align: right; }
+
+  /* ─── WALLET ──────────────────────────────────────────────── */
+  .balance-block {
+    margin: 10px 18px 14px;
+    background: var(--yellow);
+    border-radius: 22px; padding: 22px 20px 18px;
+    position: relative; overflow: hidden;
+  }
+  .balance-block::before {
+    content: ''; position: absolute;
+    right: -30px; top: -30px;
+    width: 120px; height: 120px;
+    border-radius: 50%; background: rgba(0,0,0,0.06);
+  }
+  .balance-block::after {
+    content: ''; position: absolute;
+    right: 30px; top: 40px;
+    width: 70px; height: 70px;
+    border-radius: 50%; background: rgba(0,0,0,0.04);
+  }
+  .balance-lbl { font-family: var(--font-body); font-size: 11px; font-weight: 500; color: rgba(0,0,0,0.4); margin-bottom: 4px; }
+  .balance-amount {
+    font-family: var(--font-head); font-size: 56px; font-weight: 800;
+    color: #1A1A1A; line-height: 1; letter-spacing: -2px; position: relative; z-index: 1;
+  }
+  .balance-unit { font-size: 18px; letter-spacing: 0; margin-left: 4px; }
+  .balance-equiv { font-family: var(--font-body); font-size: 11px; font-weight: 500; color: rgba(0,0,0,0.35); margin-top: 8px; }
+
+  .quick-actions { display: flex; gap: 8px; margin: 0 18px 16px; }
+  .qa-btn {
+    flex: 1; background: var(--card); border: 1px solid var(--border);
+    border-radius: 14px; padding: 12px 8px;
+    display: flex; flex-direction: column; align-items: center; gap: 6px; cursor: pointer;
+    transition: border-color 0.2s;
+  }
+  .qa-btn:hover { border-color: var(--text-dim); }
+  .qa-btn.primary { background: #1A1A1A; border-color: #1A1A1A; }
+  .qa-ico {
+    width: 32px; height: 32px; border-radius: 10px;
+    background: var(--card2); display: flex; align-items: center; justify-content: center;
+    font-size: 16px; color: var(--text-muted);
+  }
+  .qa-ico.primary { background: var(--yellow); color: #1A1A1A; }
+  .qa-lbl { font-family: var(--font-body); font-size: 10px; font-weight: 600; color: var(--text-muted); }
+  .qa-lbl.primary { color: var(--yellow); }
+
+  .month-lbl {
+    font-family: var(--font-body); font-size: 10px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.1em;
+    color: var(--text-dark); padding: 10px 22px 6px;
+  }
+
+  .stats-row { display: flex; gap: 8px; margin: 0 18px 16px; }
+  .stat-card {
+    flex: 1; background: var(--card); border: 1px solid var(--border);
+    border-radius: var(--r-sm); padding: 12px;
+  }
+  .stat-n { font-family: var(--font-head); font-size: 20px; font-weight: 800; }
+  .stat-n.inc { color: var(--green); }
+  .stat-n.out { color: var(--red); }
+  .stat-n.neu { color: var(--yellow); }
+  .stat-l { font-family: var(--font-body); font-size: 9px; color: var(--text-dim); margin-top: 2px; }
+
+  /* ─── CASHOUT ─────────────────────────────────────────────── */
+  .cashout-block {
+    margin: 0 18px 14px;
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 16px; padding: 16px;
+  }
+  .field-lbl {
+    font-family: var(--font-body); font-size: 10px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.1em;
+    color: var(--text-dim); margin-bottom: 10px;
+  }
+  .slider-row { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+  .slider-val {
+    font-family: var(--font-head); font-size: 22px; font-weight: 800;
+    color: var(--yellow); min-width: 80px; text-align: right;
+  }
+  input[type=range] {
+    flex: 1; height: 4px; background: var(--border);
+    border-radius: 2px; appearance: none; -webkit-appearance: none; outline: none; cursor: pointer;
+  }
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none; width: 18px; height: 18px;
+    border-radius: 50%; background: var(--yellow); cursor: pointer;
+  }
+  .conversion-row {
+    display: flex; justify-content: space-between; align-items: center;
+    background: var(--card2); border-radius: 10px; padding: 10px 14px; margin-top: 8px;
+  }
+  .conv-lbl { font-family: var(--font-body); font-size: 11px; color: var(--text-dim); }
+  .conv-val { font-family: var(--font-head); font-size: 18px; font-weight: 800; color: var(--green); }
+  .slider-hints { display: flex; justify-content: space-between; margin-top: 6px; }
+  .slider-hint { font-family: var(--font-body); font-size: 10px; color: var(--text-dark); }
+
+  .method-list { display: flex; flex-direction: column; gap: 8px; margin: 0 18px 14px; }
+  .method-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 14px; background: var(--card);
+    border: 1px solid var(--border); border-radius: 14px; cursor: pointer;
+    transition: border-color 0.2s;
+  }
+  .method-item.selected { border-color: var(--yellow); }
+  .method-ico {
+    width: 34px; height: 34px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center; font-size: 16px;
+  }
+  .method-info { flex: 1; }
+  .method-name { font-family: var(--font-body); font-size: 12px; font-weight: 600; color: var(--text-sec); }
+  .method-detail { font-family: var(--font-body); font-size: 10px; color: var(--text-dim); }
+  .radio {
+    width: 16px; height: 16px; border-radius: 50%;
+    border: 1.5px solid var(--border); display: flex; align-items: center; justify-content: center;
+  }
+  .radio.on { border-color: var(--yellow); }
+  .radio-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--yellow); }
+
+  .fee-box {
+    margin: 0 18px 16px; background: var(--card);
+    border: 1px solid var(--border); border-radius: 16px; overflow: hidden;
+  }
+  .fee-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 10px 16px; border-bottom: 1px solid var(--card2);
+  }
+  .fee-row:last-child { border-bottom: none; }
+  .fee-lbl { font-family: var(--font-body); font-size: 11px; color: var(--text-dim); }
+  .fee-val { font-family: var(--font-body); font-size: 11px; font-weight: 600; color: var(--text-sec); }
+  .fee-val.total { font-family: var(--font-head); font-size: 18px; font-weight: 800; color: var(--green); }
+  .fee-val.yellow { color: var(--yellow); }
+
+  /* ─── PUBLISH ─────────────────────────────────────────────── */
+  .step-bar {
+    display: flex; align-items: flex-start; margin: 6px 22px 18px;
+    position: relative;
+  }
+  .step-bar::before {
+    content: ''; position: absolute;
+    top: 12px; left: 12px; right: 12px;
+    height: 1px; background: var(--border); z-index: 0;
+  }
+  .step { display: flex; flex-direction: column; align-items: center; gap: 5px; flex: 1; position: relative; z-index: 1; }
+  .step-dot {
+    width: 24px; height: 24px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-body); font-size: 10px; font-weight: 700;
+    background: var(--card2); color: var(--text-dim); border: 1px solid var(--border);
+  }
+  .step-dot.done { background: var(--yellow); color: #1A1A1A; border-color: var(--yellow); }
+  .step-dot.curr { background: #1A1A1A; color: var(--yellow); border: 2px solid var(--yellow); }
+  .step-lbl { font-family: var(--font-body); font-size: 9px; font-weight: 500; color: var(--text-dark); text-align: center; }
+  .step-lbl.curr { color: var(--yellow); }
+  .step-lbl.done { color: var(--text-muted); }
+
+  .field-block { margin: 0 18px 12px; }
+  .field-label {
+    font-family: var(--font-body); font-size: 10px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.1em;
+    color: var(--text-dim); margin-bottom: 6px;
+  }
+  .field-input, textarea.field-input {
+    width: 100%; background: var(--card);
+    border: 1px solid var(--border); border-radius: var(--r-sm);
+    padding: 12px 14px; font-family: var(--font-body); font-size: 12px;
+    color: var(--text-sec); outline: none; resize: none;
+    transition: border-color 0.2s;
+  }
+  .field-input:focus, textarea.field-input:focus { border-color: var(--yellow); }
+  .field-input::placeholder, textarea.field-input::placeholder { color: var(--text-dark); }
+  .field-count { font-family: var(--font-body); font-size: 10px; color: var(--text-dark); text-align: right; margin-top: 4px; }
+
+  .cat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 0 18px 14px; }
+  .cat-opt {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: var(--r-sm); padding: 10px 12px;
+    display: flex; align-items: center; gap: 10px; cursor: pointer;
+    transition: all 0.2s;
+  }
+  .cat-opt:hover { border-color: var(--text-dim); }
+  .cat-opt.sel { border-color: var(--yellow); background: var(--yellow-dim); }
+  .cat-ico {
+    width: 28px; height: 28px; border-radius: 9px;
+    display: flex; align-items: center; justify-content: center; font-size: 14px;
+    background: var(--card2); color: var(--text-muted);
+    transition: all 0.2s; flex-shrink: 0;
+  }
+  .cat-opt.sel .cat-ico { background: var(--yellow-mid); color: var(--yellow); }
+  .cat-name { font-family: var(--font-body); font-size: 11px; font-weight: 600; color: var(--text-muted); }
+  .cat-opt.sel .cat-name { color: var(--yellow); }
+
+  .tag-row { display: flex; gap: 6px; flex-wrap: wrap; margin: 0 18px 14px; }
+  .tag-opt {
+    font-family: var(--font-body); font-size: 11px; font-weight: 500;
+    padding: 5px 12px; border-radius: 20px; border: 1px solid var(--border);
+    color: var(--text-muted); background: transparent; cursor: pointer; transition: all 0.2s;
+  }
+  .tag-opt.sel { background: var(--yellow-dim); border-color: rgba(242,201,76,0.4); color: var(--yellow); }
+
+  .format-grid { display: flex; gap: 8px; margin: 0 18px 14px; }
+  .fmt-opt {
+    flex: 1; background: var(--card); border: 1px solid var(--border);
+    border-radius: var(--r-sm); padding: 10px 8px; text-align: center; cursor: pointer; transition: all 0.2s;
+  }
+  .fmt-opt.sel { border-color: var(--yellow); background: var(--yellow-dim); }
+  .fmt-ico { font-size: 20px; color: var(--text-muted); margin-bottom: 4px; }
+  .fmt-opt.sel .fmt-ico { color: var(--yellow); }
+  .fmt-nm { font-family: var(--font-body); font-size: 10px; font-weight: 600; color: var(--text-muted); }
+  .fmt-opt.sel .fmt-nm { color: var(--yellow); }
+
+  .day-row { display: flex; gap: 6px; margin: 0 18px 14px; flex-wrap: wrap; }
+  .day-chip {
+    font-family: var(--font-body); font-size: 11px; font-weight: 600;
+    padding: 6px 10px; border-radius: var(--r-xs);
+    border: 1px solid var(--border); color: var(--text-dim);
+    background: transparent; cursor: pointer; transition: all 0.2s;
+  }
+  .day-chip.sel { background: var(--yellow-dim); border-color: rgba(242,201,76,0.4); color: var(--yellow); }
+
+  /* preview card */
+  .preview-card {
+    margin: 0 18px 14px; background: #1A1A1A;
+    border: 1.5px solid var(--yellow); border-radius: var(--r); padding: 16px;
+  }
+  .checklist { margin: 0 18px 16px; display: flex; flex-direction: column; gap: 8px; }
+  .chk-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 14px; border-radius: var(--r-sm);
+    background: var(--card); border: 1px solid var(--border);
+  }
+  .chk-ico {
+    width: 22px; height: 22px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center; font-size: 12px; flex-shrink: 0;
+  }
+  .chk-ico.ok { background: rgba(76,175,125,0.15); color: var(--green); }
+  .chk-ico.warn { background: var(--yellow-dim); color: var(--yellow); }
+  .chk-text { font-family: var(--font-body); font-size: 12px; font-weight: 500; color: var(--text-sec); }
+  .chk-sub { font-family: var(--font-body); font-size: 10px; color: var(--text-dim); }
+
+  /* ─── CTA BUTTONS ─────────────────────────────────────────── */
+  .cta-block { margin: 0 18px 16px; display: flex; flex-direction: column; gap: 8px; }
+  .btn-primary {
+    background: var(--yellow); color: #1A1A1A; border: none;
+    border-radius: 14px; padding: 14px;
+    font-family: var(--font-body); font-size: 13px; font-weight: 700;
+    text-align: center; cursor: pointer; transition: opacity 0.2s; width: 100%;
+  }
+  .btn-primary:hover { opacity: 0.88; }
+  .btn-secondary {
+    background: transparent; color: var(--text-dim);
+    border: 1px solid var(--border); border-radius: 14px; padding: 12px;
+    font-family: var(--font-body); font-size: 12px; font-weight: 500;
+    text-align: center; cursor: pointer; transition: border-color 0.2s; width: 100%;
+  }
+  .btn-secondary:hover { border-color: var(--text-dim); }
+
+  /* bottom cta fixed */
+  .cta-fixed {
+    display: flex; align-items: center; gap: 12px;
+    padding: 14px 22px; background: var(--surface);
+    border-top: 1px solid var(--card2); flex-shrink: 0;
+  }
+  .cta-price-big { font-family: var(--font-head); font-size: 26px; font-weight: 800; color: var(--yellow); }
+  .cta-sub { font-family: var(--font-body); font-size: 10px; color: var(--text-dim); }
+
+  /* ─── SKILL DETAIL ────────────────────────────────────────── */
+  .offer-box {
+    margin: 0 18px 14px; background: var(--card);
+    border: 1px solid var(--border); border-radius: 16px; overflow: hidden;
+  }
+  .offer-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 11px 16px; border-bottom: 1px solid var(--card2);
+  }
+  .offer-row:last-child { border-bottom: none; }
+  .offer-lbl { font-family: var(--font-body); font-size: 11px; color: var(--text-dim); display: flex; align-items: center; gap: 6px; }
+  .offer-lbl i { font-size: 14px; }
+  .offer-val { font-family: var(--font-body); font-size: 11px; font-weight: 600; color: var(--text-sec); }
+  .offer-val.y { font-family: var(--font-head); font-size: 16px; font-weight: 700; color: var(--yellow); }
+  .offer-val.g { font-family: var(--font-head); font-size: 16px; font-weight: 700; color: var(--green); }
+
+  .review-item { padding: 12px 22px; border-bottom: 1px solid var(--card2); }
+  .review-top { display: flex; justify-content: space-between; margin-bottom: 3px; }
+  .review-name { font-family: var(--font-body); font-size: 11px; font-weight: 600; color: var(--text-sec); }
+  .review-bonus { font-family: var(--font-head); font-size: 13px; font-weight: 700; color: var(--green); }
+  .review-text { font-family: var(--font-body); font-size: 10px; color: var(--text-dim); line-height: 1.5; }
+
+  /* ─── CONFIRM SCREEN ──────────────────────────────────────── */
+  .confirm-center {
+    display: flex; flex-direction: column; align-items: center;
+    padding: 40px 22px 20px; text-align: center;
+  }
+  .confirm-circle {
+    width: 72px; height: 72px; border-radius: 50%; background: var(--yellow);
+    display: flex; align-items: center; justify-content: center; margin-bottom: 18px;
+  }
+  .confirm-circle i { font-size: 34px; color: #1A1A1A; }
+  .confirm-title { font-family: var(--font-head); font-size: 28px; font-weight: 800; color: var(--text); text-transform: uppercase; margin-bottom: 6px; }
+  .confirm-sub { font-family: var(--font-body); font-size: 12px; color: var(--text-dim); line-height: 1.6; }
+
+  .summary-box {
+    margin: 0 18px 14px; background: var(--card);
+    border: 1px solid var(--border); border-radius: 16px; overflow: hidden;
+  }
+  .summary-lbl {
+    font-family: var(--font-body); font-size: 10px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.1em;
+    color: var(--text-dim); padding: 12px 16px 8px;
+  }
+
+  .remaining-box {
+    margin: 0 18px 16px; background: var(--card);
+    border: 1px solid var(--border); border-radius: 14px;
+    padding: 14px 16px; display: flex; align-items: center; gap: 14px;
+  }
+  .remaining-ico {
+    width: 38px; height: 38px; border-radius: 12px;
+    background: var(--yellow-dim); color: var(--yellow);
+    display: flex; align-items: center; justify-content: center; font-size: 18px;
+  }
+  .remaining-n { font-family: var(--font-head); font-size: 22px; font-weight: 800; color: var(--yellow); }
+  .remaining-lbl { font-family: var(--font-body); font-size: 10px; color: var(--text-dim); }
+
+  /* ─── SCREENS (show/hide) ─────────────────────────────────── */
+  .screen { display: none; flex-direction: column; height: 100%; }
+  .screen.active { display: flex; }
+
+  /* ─── TRANSITIONS ─────────────────────────────────────────── */
+  .phone-frame { transition: none; }
+
+  /* ─── DETAIL DESC ─────────────────────────────────────────── */
+  .det-desc { font-family: var(--font-body); font-size: 12px; color: var(--text-dim); line-height: 1.6; padding: 0 22px; margin-bottom: 14px; }
+
+  .price-slider-wrap { margin-bottom: 8px; }
+
+  /* NOTIF */
+  .notif-item{display:flex;align-items:flex-start;gap:12px;padding:14px 22px;border-bottom:1px solid var(--card2);cursor:pointer;transition:background 0.15s;}
+  .notif-item:hover{background:var(--card2);}
+  .notif-unread{background:rgba(242,201,76,0.025);}
+  .notif-ico{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;}
+  .notif-body{flex:1;min-width:0;}
+  .notif-title{font-family:var(--font-body);font-size:12px;font-weight:600;color:var(--text-sec);margin-bottom:3px;}
+  .notif-desc{font-family:var(--font-body);font-size:11px;color:var(--text-dim);line-height:1.45;}
+  .notif-time{font-family:var(--font-body);font-size:10px;color:var(--text-dim);margin-top:3px;}
+  .notif-dot{width:7px;height:7px;border-radius:50%;background:var(--yellow);flex-shrink:0;margin-top:5px;}
+
+</style>
+</head>
+<body>
+<div class="app-shell">
+<div class="phone-frame">
+
+  <!-- ═══════════════════════════════════════════════
+       SCREEN 1: FEED
+  ═══════════════════════════════════════════════ -->
+  <div class="screen active" id="screen-feed">
+    <div class="status-bar">
+      <span class="status-time">9:41</span>
+      <div class="status-icons">
+        <i class="ti ti-wifi"></i>
+        <i class="ti ti-battery-2"></i>
+      </div>
+    </div>
+    <div class="topbar">
+      <div class="topbar-title">Descubrir</div>
+      <div class="tk-chip"><div class="tk-dot"></div><span id="feed-tokens">240</span> tkn</div>
+    </div>
+    <div class="screen-body">
+      <div class="search-bar">
+        <i class="ti ti-search"></i>
+        <span>Buscar habilidades, personas...</span>
+      </div>
+      <div class="cats">
+        <div class="cat active" onclick="filterCat(this,'Todo')">Todo</div>
+        <div class="cat" onclick="filterCat(this,'Negocio')">Negocio</div>
+        <div class="cat" onclick="filterCat(this,'Tech')">Tech</div>
+        <div class="cat" onclick="filterCat(this,'Creativo')">Creativo</div>
+        <div class="cat" onclick="filterCat(this,'Legal')">Legal</div>
+        <div class="cat" onclick="filterCat(this,'Bienestar')">Bienestar</div>
+      </div>
+
+      <!-- Featured card -->
+      <div class="skill-card featured" onclick="goTo('screen-detail')">
+        <div class="sk-user-row">
+          <div class="avatar" style="background:rgba(0,0,0,0.12);color:#1A1A1A;">CM</div>
+          <div><div class="user-name dark">Carmen Molina</div><div class="user-loc dark">Madrid · hace 2h</div></div>
+          <div class="verified dk"><i class="ti ti-check"></i></div>
+        </div>
+        <div class="sk-title dark">Estructuración de operaciones M&A para founders</div>
+        <div class="sk-desc dark">Guía completa: valoración, due diligence, negociación. 20+ deals cerrados.</div>
+        <div class="tags"><span class="tag tag-dk">M&A</span><span class="tag tag-dk">Finanzas</span><span class="tag tag-dk">Estrategia</span></div>
+        <div class="sk-footer dark">
+          <div class="price-label dark"><i class="ti ti-diamond"></i>40 tkn / sesión</div>
+          <button class="btn-request dark" onclick="event.stopPropagation()">Solicitar</button>
+        </div>
+      </div>
+
+      <div class="skill-card" onclick="goTo('screen-detail')">
+        <div class="sk-user-row">
+          <div class="avatar" style="background:rgba(242,201,76,0.1);color:#F2C94C;">RP</div>
+          <div><div class="user-name">Raúl Pinto</div><div class="user-loc">Barcelona · hace 5h</div></div>
+          <div class="verified"><i class="ti ti-check"></i></div>
+        </div>
+        <div class="sk-title">Arquitectura de marca para startups en fase seed</div>
+        <div class="sk-desc">De naming a guidelines completas. Rápido y orientado a inversores.</div>
+        <div class="tags"><span class="tag tag-y">Branding</span><span class="tag tag-n">Diseño</span></div>
+        <div class="sk-footer">
+          <div class="price-label"><i class="ti ti-diamond"></i>25 tkn / sesión</div>
+          <button class="btn-request" onclick="event.stopPropagation()">Solicitar</button>
+        </div>
+      </div>
+
+      <div class="skill-card" onclick="goTo('screen-detail')">
+        <div class="sk-user-row">
+          <div class="avatar" style="background:#2E2E30;color:#888;">LF</div>
+          <div><div class="user-name">Lena Fischer</div><div class="user-loc">Berlín · ayer</div></div>
+          <div style="margin-left:auto;width:18px;height:18px;border-radius:50%;background:#2E2E30;display:flex;align-items:center;justify-content:center;"><i class="ti ti-check" style="font-size:11px;color:#555;"></i></div>
+        </div>
+        <div class="sk-title">Mindfulness ejecutivo para directivos en alta presión</div>
+        <div class="sk-desc">Protocolo de 8 semanas para CEOs y directores. Con seguimiento.</div>
+        <div class="tags"><span class="tag tag-y">Bienestar</span><span class="tag tag-n">Liderazgo</span></div>
+        <div class="sk-footer">
+          <div class="price-label"><i class="ti ti-diamond"></i>15 tkn / sesión</div>
+          <button class="btn-request" onclick="event.stopPropagation()">Solicitar</button>
+        </div>
+      </div>
+
+      <div class="skill-card" onclick="goTo('screen-detail')">
+        <div class="sk-user-row">
+          <div class="avatar" style="background:rgba(76,175,125,0.1);color:#4CAF7D;">JA</div>
+          <div><div class="user-name">Jaime Arenas</div><div class="user-loc">Madrid · hace 1 día</div></div>
+          <div class="verified"><i class="ti ti-check"></i></div>
+        </div>
+        <div class="sk-title">Estrategia legal y regulatoria para sectores energéticos</div>
+        <div class="sk-desc">Derecho público, ESG y regulación sectorial. Red de contactos en administraciones.</div>
+        <div class="tags"><span class="tag tag-y">Legal</span><span class="tag tag-n">Energía</span><span class="tag tag-n">ESG</span></div>
+        <div class="sk-footer">
+          <div class="price-label"><i class="ti ti-diamond"></i>35 tkn / sesión</div>
+          <button class="btn-request" onclick="event.stopPropagation()">Solicitar</button>
+        </div>
+      </div>
+      <div style="height:16px;"></div>
+    </div>
+    <div class="bottom-nav">
+      <div class="nav-item active"><i class="ti ti-home"></i>Feed</div>
+      <div class="nav-item" onclick="goTo('screen-notif')"><i class="ti ti-bell"></i>Alertas</div>
+      <div class="nav-item" onclick="goTo('screen-publish')"><i class="ti ti-rocket"></i>Publicar</div>
+      <div class="nav-item" onclick="goTo('screen-wallet')"><i class="ti ti-diamond"></i>Wallet</div>
+      <div class="nav-item" onclick="goTo('screen-profile')"><i class="ti ti-user"></i>Perfil</div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════
+       SCREEN 2: SKILL DETAIL
+  ═══════════════════════════════════════════════ -->
+  <div class="screen" id="screen-detail">
+    <div class="status-bar">
+      <span class="status-time">9:41</span>
+      <div class="status-icons"><i class="ti ti-wifi"></i><i class="ti ti-battery-2"></i></div>
+    </div>
+    <div class="topbar">
+      <div class="topbar-back" onclick="goTo('screen-feed')">
+        <i class="ti ti-arrow-left"></i>
+        <div class="topbar-title" style="font-size:20px;">Detalle</div>
+      </div>
+      <i class="ti ti-share" style="font-size:20px;color:var(--text-dim);cursor:pointer;"></i>
+    </div>
+    <div class="screen-body">
+      <div style="padding: 0 22px 14px; border-bottom: 1px solid var(--card2); margin-bottom: 14px;">
+        <div class="sk-user-row" style="margin-bottom:12px;">
+          <div class="avatar" style="background:rgba(242,201,76,0.1);color:#F2C94C;width:38px;height:38px;font-size:12px;">CM</div>
+          <div><div class="user-name">Carmen Molina</div><div class="user-loc">34 sesiones · 4.9 ★</div></div>
+          <div class="verified" style="margin-left:auto;"><i class="ti ti-check"></i></div>
+        </div>
+        <div class="sk-title" style="font-size:20px;margin-bottom:8px;">Estructuración M&A para founders sin base financiera</div>
+        <div class="tags" style="margin-bottom:10px;">
+          <span class="tag tag-y">M&A</span><span class="tag tag-n">Finanzas</span><span class="tag tag-n">Estrategia</span>
+        </div>
+        <div style="font-family:var(--font-body);font-size:12px;color:var(--text-dim);line-height:1.65;">
+          Guía completa del proceso: valoración inicial, análisis de comparables, negociación de términos y cierre. Adaptado a founders que necesitan entender el lenguaje financiero sin ser expertos.
+        </div>
+      </div>
+
+      <div class="offer-box">
+        <div class="offer-row">
+          <span class="offer-lbl"><i class="ti ti-clock"></i>Duración</span>
+          <span class="offer-val">90 min / sesión</span>
+        </div>
+        <div class="offer-row">
+          <span class="offer-lbl"><i class="ti ti-diamond"></i>Precio base</span>
+          <span class="offer-val y">40 tokens</span>
+        </div>
+        <div class="offer-row">
+          <span class="offer-lbl"><i class="ti ti-star"></i>Bonus máximo</span>
+          <span class="offer-val g">+16 tokens</span>
+        </div>
+        <div class="offer-row">
+          <span class="offer-lbl"><i class="ti ti-calendar"></i>Disponibilidad</span>
+          <span class="offer-val">Lun–Vie, 9–18h</span>
+        </div>
+        <div class="offer-row">
+          <span class="offer-lbl"><i class="ti ti-video"></i>Formato</span>
+          <span class="offer-val">Videollamada</span>
+        </div>
+      </div>
+
+      <div class="sec-lbl">Valoraciones</div>
+      <div class="review-item">
+        <div class="review-top">
+          <span class="review-name">Jorge Almeida · CEO Fenix</span>
+          <span class="review-bonus">+8 tkn bonus</span>
+        </div>
+        <div class="review-text">La sesión más clara que he tenido sobre M&A. Entendí EBITDA vs flujo de caja en mi contexto por primera vez.</div>
+      </div>
+      <div class="review-item">
+        <div class="review-top">
+          <span class="review-name">Ana Torres · CFO Versa</span>
+          <span class="review-bonus">+6 tkn bonus</span>
+        </div>
+        <div class="review-text">Me ayudó a estructurar la oferta para un comprador industrial. Cerramos el deal 3 semanas después.</div>
+      </div>
+      <div class="review-item">
+        <div class="review-top">
+          <span class="review-name">Marcos Gil · Founder Nodo</span>
+          <span class="review-bonus">+10 tkn bonus</span>
+        </div>
+        <div class="review-text">Imprescindible. Llegué sin saber nada de valoraciones y salí con un modelo financiero propio.</div>
+      </div>
+      <div style="height:16px;"></div>
+    </div>
+    <div class="cta-fixed">
+      <div>
+        <div class="cta-price-big">40 tkn</div>
+        <div class="cta-sub">+ hasta 16 de bonus</div>
+      </div>
+      <button class="btn-primary" style="flex:1;" onclick="goTo('screen-request')">Solicitar sesión</button>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════
+       SCREEN 3: PROFILE
+  ═══════════════════════════════════════════════ -->
+  <div class="screen" id="screen-profile">
+    <div class="status-bar">
+      <span class="status-time">9:41</span>
+      <div class="status-icons"><i class="ti ti-wifi"></i><i class="ti ti-battery-2"></i></div>
+    </div>
+    <div class="topbar">
+      <div class="topbar-title">Mi perfil</div>
+      <div class="tk-chip"><div class="tk-dot"></div>840 ganados</div>
+    </div>
+    <div class="screen-body">
+      <div class="profile-hero">
+        <div class="profile-top">
+          <div class="profile-av">CM</div>
+          <div>
+            <div class="profile-name">Carmen Molina</div>
+            <div class="profile-role">Partner M&A · Madrid</div>
+          </div>
+        </div>
+        <div class="profile-stats">
+          <div class="pstat"><div class="pstat-n">840</div><div class="pstat-l">tkn ganados</div></div>
+          <div class="pstat"><div class="pstat-n">34</div><div class="pstat-l">sesiones</div></div>
+          <div class="pstat"><div class="pstat-n">4.9</div><div class="pstat-l">valoración</div></div>
+        </div>
+      </div>
+
+      <div class="sec-lbl">Habilidades activas</div>
+      <div class="skill-row" onclick="goTo('screen-detail')">
+        <div class="skill-ico" style="background:rgba(242,201,76,0.1);color:#F2C94C;"><i class="ti ti-trending-up"></i></div>
+        <div class="skill-info"><div class="skill-name">Estructuración M&A para founders</div><div class="skill-meta">28 solicitudes · activo</div></div>
+        <div class="skill-rate">40 tkn</div>
+      </div>
+      <div class="skill-row" onclick="goTo('screen-detail')">
+        <div class="skill-ico" style="background:#2E2E30;color:#888;"><i class="ti ti-building-bank"></i></div>
+        <div class="skill-info"><div class="skill-name">Fundraising Series A fondos europeos</div><div class="skill-meta">12 solicitudes · activo</div></div>
+        <div class="skill-rate">60 tkn</div>
+      </div>
+      <div class="skill-row" onclick="goTo('screen-detail')">
+        <div class="skill-ico" style="background:#2E2E30;color:#888;"><i class="ti ti-users"></i></div>
+        <div class="skill-info"><div class="skill-name">Negociación con inversores</div><div class="skill-meta">6 solicitudes · activo</div></div>
+        <div class="skill-rate">50 tkn</div>
+      </div>
+
+      <div class="sec-lbl">Historial de tokens</div>
+      <div class="tx-row">
+        <div class="tx-ico" style="background:rgba(76,175,125,0.1);color:#4CAF7D;"><i class="ti ti-arrow-down-left"></i></div>
+        <div style="flex:1;"><div class="tx-name">Sesión · Jorge Almeida</div><div class="tx-meta">M&A · hace 3 días</div></div>
+        <div style="text-align:right;"><div class="tx-amt-in">+40 tkn</div><div class="tx-type">Base</div></div>
+      </div>
+      <div class="tx-row">
+        <div class="tx-ico" style="background:rgba(242,201,76,0.1);color:#F2C94C;"><i class="ti ti-star"></i></div>
+        <div style="flex:1;"><div class="tx-name">Bonus · Jorge Almeida</div><div class="tx-meta">Valoración 5.0 · hace 3 días</div></div>
+        <div style="text-align:right;"><div class="tx-amt-bonus">+12 tkn</div><div class="tx-type">Bonus</div></div>
+      </div>
+      <div class="tx-row">
+        <div class="tx-ico" style="background:rgba(224,90,90,0.1);color:#E05A5A;"><i class="ti ti-arrow-up-right"></i></div>
+        <div style="flex:1;"><div class="tx-name">Sesión · Lena Fischer</div><div class="tx-meta">Bienestar · hace 5 días</div></div>
+        <div style="text-align:right;"><div class="tx-amt-out">–15 tkn</div><div class="tx-type">Gasto</div></div>
+      </div>
+      <div class="tx-row">
+        <div class="tx-ico" style="background:rgba(76,175,125,0.1);color:#4CAF7D;"><i class="ti ti-arrow-down-left"></i></div>
+        <div style="flex:1;"><div class="tx-name">Sesión · Ana Torres</div><div class="tx-meta">Fundraising · hace 1 semana</div></div>
+        <div style="text-align:right;"><div class="tx-amt-in">+60 tkn</div><div class="tx-type">Base</div></div>
+      </div>
+      <div style="height:16px;"></div>
+    </div>
+    <div class="bottom-nav">
+      <div class="nav-item" onclick="goTo('screen-feed')"><i class="ti ti-home"></i>Feed</div>
+      <div class="nav-item" onclick="goTo('screen-notif')"><i class="ti ti-bell"></i>Alertas</div>
+      <div class="nav-item" onclick="goTo('screen-publish')"><i class="ti ti-rocket"></i>Publicar</div>
+      <div class="nav-item" onclick="goTo('screen-wallet')"><i class="ti ti-diamond"></i>Wallet</div>
+      <div class="nav-item active"><i class="ti ti-user"></i>Perfil</div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════
+       SCREEN 4: WALLET
+  ═══════════════════════════════════════════════ -->
+  <div class="screen" id="screen-wallet">
+    <div class="status-bar">
+      <span class="status-time">9:41</span>
+      <div class="status-icons"><i class="ti ti-wifi"></i><i class="ti ti-battery-2"></i></div>
+    </div>
+    <div class="topbar">
+      <div class="topbar-title">Wallet</div>
+      <i class="ti ti-bell" style="font-size:22px;color:var(--text-dim);cursor:pointer;"></i>
+    </div>
+    <div class="screen-body">
+      <div class="balance-block">
+        <div class="balance-lbl">Saldo disponible</div>
+        <div class="balance-amount">840<span class="balance-unit">tkn</span></div>
+        <div class="balance-equiv">≈ 420 € al cambio actual</div>
+      </div>
+
+      <div class="quick-actions">
+        <div class="qa-btn primary" onclick="goTo('screen-cashout')">
+          <div class="qa-ico primary"><i class="ti ti-arrow-up-right"></i></div>
+          <div class="qa-lbl primary">Cash out</div>
+        </div>
+        <div class="qa-btn">
+          <div class="qa-ico"><i class="ti ti-send"></i></div>
+          <div class="qa-lbl">Transferir</div>
+        </div>
+        <div class="qa-btn">
+          <div class="qa-ico"><i class="ti ti-qrcode"></i></div>
+          <div class="qa-lbl">Recibir</div>
+        </div>
+        <div class="qa-btn">
+          <div class="qa-ico"><i class="ti ti-chart-line"></i></div>
+          <div class="qa-lbl">Historial</div>
+        </div>
+      </div>
+
+      <div class="sec-lbl">Resumen del mes</div>
+      <div class="stats-row">
+        <div class="stat-card"><div class="stat-n inc">+248</div><div class="stat-l">Tkn ganados</div></div>
+        <div class="stat-card"><div class="stat-n out">–62</div><div class="stat-l">Tkn gastados</div></div>
+        <div class="stat-card"><div class="stat-n neu">7</div><div class="stat-l">Sesiones</div></div>
+      </div>
+
+      <div class="month-lbl">Mayo 2026</div>
+      <div class="tx-row">
+        <div class="tx-ico" style="background:rgba(76,175,125,0.1);color:#4CAF7D;"><i class="ti ti-arrow-down-left"></i></div>
+        <div style="flex:1;"><div class="tx-name">Sesión · Jorge Almeida</div><div class="tx-meta">M&A · hace 3 días</div></div>
+        <div style="text-align:right;"><div class="tx-amt-in">+40 tkn</div><div class="tx-type">Base</div></div>
+      </div>
+      <div class="tx-row">
+        <div class="tx-ico" style="background:rgba(242,201,76,0.1);color:#F2C94C;"><i class="ti ti-star"></i></div>
+        <div style="flex:1;"><div class="tx-name">Bonus · Jorge Almeida</div><div class="tx-meta">Valoración 5.0 · hace 3 días</div></div>
+        <div style="text-align:right;"><div class="tx-amt-bonus">+12 tkn</div><div class="tx-type">Bonus</div></div>
+      </div>
+      <div class="tx-row">
+        <div class="tx-ico" style="background:rgba(224,90,90,0.1);color:#E05A5A;"><i class="ti ti-arrow-up-right"></i></div>
+        <div style="flex:1;"><div class="tx-name">Sesión · Lena Fischer</div><div class="tx-meta">Bienestar · hace 5 días</div></div>
+        <div style="text-align:right;"><div class="tx-amt-out">–15 tkn</div><div class="tx-type">Gasto</div></div>
+      </div>
+      <div class="tx-row">
+        <div class="tx-ico" style="background:rgba(76,175,125,0.1);color:#4CAF7D;"><i class="ti ti-arrow-down-left"></i></div>
+        <div style="flex:1;"><div class="tx-name">Sesión · Ana Torres</div><div class="tx-meta">Fundraising · hace 1 sem.</div></div>
+        <div style="text-align:right;"><div class="tx-amt-in">+60 tkn</div><div class="tx-type">Base</div></div>
+      </div>
+      <div class="month-lbl">Abril 2026</div>
+      <div class="tx-row">
+        <div class="tx-ico" style="background:rgba(76,175,125,0.1);color:#4CAF7D;"><i class="ti ti-arrow-down-left"></i></div>
+        <div style="flex:1;"><div class="tx-name">Sesión · Marta Llopis</div><div class="tx-meta">M&A · hace 18 días</div></div>
+        <div style="text-align:right;"><div class="tx-amt-in">+40 tkn</div><div class="tx-type">Base</div></div>
+      </div>
+      <div class="tx-row">
+        <div class="tx-ico" style="background:rgba(224,90,90,0.1);color:#E05A5A;"><i class="ti ti-coin"></i></div>
+        <div style="flex:1;"><div class="tx-name">Cash out · SEPA</div><div class="tx-meta">hace 22 días · → 100 €</div></div>
+        <div style="text-align:right;"><div class="tx-amt-out">–200 tkn</div><div class="tx-type">Cash out</div></div>
+      </div>
+      <div style="height:16px;"></div>
+    </div>
+    <div class="bottom-nav">
+      <div class="nav-item" onclick="goTo('screen-feed')"><i class="ti ti-home"></i>Feed</div>
+      <div class="nav-item" onclick="goTo('screen-notif')"><i class="ti ti-bell"></i>Alertas</div>
+      <div class="nav-item" onclick="goTo('screen-publish')"><i class="ti ti-rocket"></i>Publicar</div>
+      <div class="nav-item active"><i class="ti ti-diamond"></i>Wallet</div>
+      <div class="nav-item" onclick="goTo('screen-profile')"><i class="ti ti-user"></i>Perfil</div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════
+       SCREEN 5: CASH OUT
+  ═══════════════════════════════════════════════ -->
+  <div class="screen" id="screen-cashout">
+    <div class="status-bar">
+      <span class="status-time">9:41</span>
+      <div class="status-icons"><i class="ti ti-wifi"></i><i class="ti ti-battery-2"></i></div>
+    </div>
+    <div class="topbar">
+      <div class="topbar-back" onclick="goTo('screen-wallet')">
+        <i class="ti ti-arrow-left"></i>
+        <div class="topbar-title" style="font-size:20px;">Cash out</div>
+      </div>
+    </div>
+    <div class="screen-body">
+      <div class="cashout-block">
+        <div class="field-lbl">Tokens a convertir</div>
+        <div class="price-slider-wrap">
+          <div class="slider-row">
+            <input type="range" min="50" max="840" value="400" step="10" id="cashSlider" oninput="updateCashout(this.value)">
+            <div class="slider-val" id="cashVal">400 tkn</div>
+          </div>
+          <div class="conversion-row">
+            <span class="conv-lbl">Recibirás</span>
+            <span class="conv-val" id="cashEur">200,00 €</span>
+          </div>
+          <div class="slider-hints">
+            <span class="slider-hint">Mín. 50 tkn</span>
+            <span class="slider-hint">Saldo: 840 tkn</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="sec-lbl">Método de cobro</div>
+      <div class="method-list">
+        <div class="method-item selected" onclick="selectMethod(this)">
+          <div class="method-ico" style="background:rgba(242,201,76,0.1);color:#F2C94C;"><i class="ti ti-building-bank"></i></div>
+          <div class="method-info"><div class="method-name">Transferencia SEPA</div><div class="method-detail">1–2 días hábiles · sin comisión</div></div>
+          <div class="radio on"><div class="radio-dot"></div></div>
+        </div>
+        <div class="method-item" onclick="selectMethod(this)">
+          <div class="method-ico" style="background:#2E2E30;color:#888;"><i class="ti ti-brand-paypal"></i></div>
+          <div class="method-info"><div class="method-name">PayPal</div><div class="method-detail">Inmediato · 1,5% comisión</div></div>
+          <div class="radio"></div>
+        </div>
+        <div class="method-item" onclick="selectMethod(this)">
+          <div class="method-ico" style="background:#2E2E30;color:#888;"><i class="ti ti-currency-bitcoin"></i></div>
+          <div class="method-info"><div class="method-name">Crypto (USDC)</div><div class="method-detail">Inmediato · 0,5% comisión</div></div>
+          <div class="radio"></div>
+        </div>
+      </div>
+
+      <div class="fee-box">
+        <div class="fee-row"><span class="fee-lbl">Tokens a canjear</span><span class="fee-val" id="feeTokens">400 tkn</span></div>
+        <div class="fee-row"><span class="fee-lbl">Tipo de cambio</span><span class="fee-val">1 tkn = 0,50 €</span></div>
+        <div class="fee-row"><span class="fee-lbl">Comisión plataforma</span><span class="fee-val">0,00 €</span></div>
+        <div class="fee-row"><span class="fee-lbl">Total a recibir</span><span class="fee-val total" id="feeTotal">200,00 €</span></div>
+      </div>
+
+      <div class="cta-block">
+        <button class="btn-primary" onclick="goTo('screen-confirm')">Confirmar cash out</button>
+      </div>
+      <div style="text-align:center;padding:0 22px 20px;">
+        <span style="font-family:var(--font-body);font-size:10px;color:var(--text-dark);line-height:1.6;">Procesado por Stripe · Fondos protegidos<br>Saldo mínimo de 50 tkn tras el canje</span>
+      </div>
+    </div>
+    <div class="bottom-nav">
+      <div class="nav-item" onclick="goTo('screen-feed')"><i class="ti ti-home"></i>Feed</div>
+      <div class="nav-item" onclick="goTo('screen-notif')"><i class="ti ti-bell"></i>Alertas</div>
+      <div class="nav-item" onclick="goTo('screen-publish')"><i class="ti ti-rocket"></i>Publicar</div>
+      <div class="nav-item active"><i class="ti ti-diamond"></i>Wallet</div>
+      <div class="nav-item" onclick="goTo('screen-profile')"><i class="ti ti-user"></i>Perfil</div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════
+       SCREEN 6: CONFIRM CASHOUT
+  ═══════════════════════════════════════════════ -->
+  <div class="screen" id="screen-confirm">
+    <div class="status-bar">
+      <span class="status-time">9:41</span>
+      <div class="status-icons"><i class="ti ti-wifi"></i><i class="ti ti-battery-2"></i></div>
+    </div>
+    <div class="topbar">
+      <div class="topbar-title" style="font-size:20px;">Confirmación</div>
+    </div>
+    <div class="screen-body">
+      <div class="confirm-center">
+        <div class="confirm-circle"><i class="ti ti-check"></i></div>
+        <div class="confirm-title">¡Solicitud enviada!</div>
+        <div class="confirm-sub">Tu transferencia está siendo procesada.<br>Recibirás 200,00 € en 1–2 días hábiles.</div>
+      </div>
+      <div class="summary-box">
+        <div class="summary-lbl">Resumen de la operación</div>
+        <div class="fee-row"><span class="fee-lbl">Tokens canjeados</span><span class="fee-val" style="color:var(--red);font-family:var(--font-head);font-size:16px;font-weight:800;">–400 tkn</span></div>
+        <div class="fee-row"><span class="fee-lbl">Método</span><span class="fee-val">SEPA</span></div>
+        <div class="fee-row"><span class="fee-lbl">Estimado</span><span class="fee-val">1–2 días hábiles</span></div>
+        <div class="fee-row"><span class="fee-lbl">Total a recibir</span><span class="fee-val total">200,00 €</span></div>
+      </div>
+      <div class="remaining-box">
+        <div class="remaining-ico"><i class="ti ti-diamond"></i></div>
+        <div><div class="remaining-n">440 tkn</div><div class="remaining-lbl">Saldo restante</div></div>
+      </div>
+      <div class="cta-block">
+        <button class="btn-primary" onclick="goTo('screen-wallet')">Volver a mi wallet</button>
+        <button class="btn-secondary" onclick="goTo('screen-wallet')">Ver estado de la transferencia</button>
+      </div>
+    </div>
+    <div class="bottom-nav">
+      <div class="nav-item" onclick="goTo('screen-feed')"><i class="ti ti-home"></i>Feed</div>
+      <div class="nav-item" onclick="goTo('screen-notif')"><i class="ti ti-bell"></i>Alertas</div>
+      <div class="nav-item" onclick="goTo('screen-publish')"><i class="ti ti-rocket"></i>Publicar</div>
+      <div class="nav-item active"><i class="ti ti-diamond"></i>Wallet</div>
+      <div class="nav-item" onclick="goTo('screen-profile')"><i class="ti ti-user"></i>Perfil</div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════
+       SCREEN 7: PUBLISH
+  ═══════════════════════════════════════════════ -->
+  <div class="screen" id="screen-publish">
+    <div class="status-bar">
+      <span class="status-time">9:41</span>
+      <div class="status-icons"><i class="ti ti-wifi"></i><i class="ti ti-battery-2"></i></div>
+    </div>
+    <div class="topbar">
+      <div class="topbar-back" onclick="goTo('screen-feed')">
+        <i class="ti ti-arrow-left"></i>
+        <div class="topbar-title" style="font-size:20px;">Publicar</div>
+      </div>
+      <i class="ti ti-x" style="font-size:20px;color:var(--text-dim);cursor:pointer;" onclick="goTo('screen-feed')"></i>
+    </div>
+    <div class="screen-body">
+      <div class="step-bar">
+        <div class="step" id="sp1"><div class="step-dot curr" id="sd1">1</div><div class="step-lbl curr" id="sl1">Categoría</div></div>
+        <div class="step" id="sp2"><div class="step-dot" id="sd2">2</div><div class="step-lbl" id="sl2">Detalle</div></div>
+        <div class="step" id="sp3"><div class="step-dot" id="sd3">3</div><div class="step-lbl" id="sl3">Precio</div></div>
+        <div class="step" id="sp4"><div class="step-dot" id="sd4">4</div><div class="step-lbl" id="sl4">Publicar</div></div>
+      </div>
+
+      <!-- STEP 1 -->
+      <div id="pub-step1">
+        <div class="field-block">
+          <div class="field-label">Título de la habilidad</div>
+          <textarea class="field-input" rows="2" id="pub-title" placeholder="Ej: Estructuración de operaciones M&A...">Fundraising de Series A con fondos europeos</textarea>
+          <div class="field-count" id="title-count">47 / 80</div>
+        </div>
+        <div class="sec-lbl">Categoría</div>
+        <div class="cat-grid">
+          <div class="cat-opt" onclick="selCat(this)"><div class="cat-ico"><i class="ti ti-briefcase"></i></div><div class="cat-name">Negocio</div></div>
+          <div class="cat-opt sel" onclick="selCat(this)"><div class="cat-ico"><i class="ti ti-building-bank"></i></div><div class="cat-name">Finanzas</div></div>
+          <div class="cat-opt" onclick="selCat(this)"><div class="cat-ico"><i class="ti ti-code"></i></div><div class="cat-name">Tecnología</div></div>
+          <div class="cat-opt" onclick="selCat(this)"><div class="cat-ico"><i class="ti ti-brush"></i></div><div class="cat-name">Creativo</div></div>
+          <div class="cat-opt" onclick="selCat(this)"><div class="cat-ico"><i class="ti ti-heart"></i></div><div class="cat-name">Bienestar</div></div>
+          <div class="cat-opt" onclick="selCat(this)"><div class="cat-ico"><i class="ti ti-gavel"></i></div><div class="cat-name">Legal</div></div>
+        </div>
+        <div class="sec-lbl">Etiquetas</div>
+        <div class="tag-row">
+          <div class="tag-opt sel" onclick="this.classList.toggle('sel')">M&A</div>
+          <div class="tag-opt sel" onclick="this.classList.toggle('sel')">Finanzas</div>
+          <div class="tag-opt sel" onclick="this.classList.toggle('sel')">Inversores</div>
+          <div class="tag-opt" onclick="this.classList.toggle('sel')">Estrategia</div>
+          <div class="tag-opt" onclick="this.classList.toggle('sel')">Startups</div>
+          <div class="tag-opt">+ Añadir</div>
+        </div>
+        <div class="cta-block" style="margin-top:8px;">
+          <button class="btn-primary" onclick="pubNext(2)">Siguiente → Detalle</button>
+        </div>
+      </div>
+
+      <!-- STEP 2 -->
+      <div id="pub-step2" style="display:none;">
+        <div class="field-block">
+          <div class="field-label">¿Qué ofreces exactamente?</div>
+          <textarea class="field-input" rows="5" placeholder="Describe en detalle qué haces y qué resultados puede esperar...">Te acompaño en el proceso completo de fundraising para una Serie A con fondos europeos: deck, identificación de inversores, pitch y negociación de términos. 15+ rondas completadas.</textarea>
+          <div class="field-count">198 / 300</div>
+        </div>
+        <div class="sec-lbl">Formato de sesión</div>
+        <div class="format-grid">
+          <div class="fmt-opt sel" onclick="selFmt(this)"><div class="fmt-ico"><i class="ti ti-video"></i></div><div class="fmt-nm">Videollamada</div></div>
+          <div class="fmt-opt" onclick="selFmt(this)"><div class="fmt-ico"><i class="ti ti-message"></i></div><div class="fmt-nm">Chat asíncrono</div></div>
+          <div class="fmt-opt" onclick="selFmt(this)"><div class="fmt-ico"><i class="ti ti-map-pin"></i></div><div class="fmt-nm">Presencial</div></div>
+        </div>
+        <div class="sec-lbl">Disponibilidad</div>
+        <div class="day-row">
+          <div class="day-chip sel" onclick="this.classList.toggle('sel')">Lun</div>
+          <div class="day-chip sel" onclick="this.classList.toggle('sel')">Mar</div>
+          <div class="day-chip sel" onclick="this.classList.toggle('sel')">Mié</div>
+          <div class="day-chip sel" onclick="this.classList.toggle('sel')">Jue</div>
+          <div class="day-chip sel" onclick="this.classList.toggle('sel')">Vie</div>
+          <div class="day-chip" onclick="this.classList.toggle('sel')">Sáb</div>
+          <div class="day-chip" onclick="this.classList.toggle('sel')">Dom</div>
+        </div>
+        <div class="field-block">
+          <div class="field-label">Horario</div>
+          <div style="display:flex;gap:8px;">
+            <input class="field-input" style="flex:1;padding:10px 12px;" value="09:00">
+            <span style="font-family:var(--font-body);font-size:14px;color:var(--text-dim);padding-top:10px;">—</span>
+            <input class="field-input" style="flex:1;padding:10px 12px;" value="18:00">
+          </div>
+        </div>
+        <div class="cta-block">
+          <button class="btn-primary" onclick="pubNext(3)">Siguiente → Precio</button>
+          <button class="btn-secondary" onclick="pubNext(1)">Atrás</button>
+        </div>
+      </div>
+
+      <!-- STEP 3 -->
+      <div id="pub-step3" style="display:none;">
+        <div class="cashout-block">
+          <div class="field-lbl">Precio base por sesión</div>
+          <div class="slider-row">
+            <input type="range" min="5" max="200" value="60" step="5" id="priceSlider" oninput="updatePrice(this.value)">
+            <div class="slider-val" id="priceVal">60 tkn</div>
+          </div>
+          <div class="conversion-row">
+            <span class="conv-lbl">Bonus máximo (40%)</span>
+            <span class="conv-val" id="bonusVal" style="color:var(--yellow);">+24 tkn</span>
+          </div>
+          <div class="slider-hints">
+            <span class="slider-hint">Recomendado: 30–80 tkn</span>
+            <span class="slider-hint">Máx. 200 tkn</span>
+          </div>
+        </div>
+        <div class="sec-lbl">Duración de la sesión</div>
+        <div class="format-grid">
+          <div class="fmt-opt" onclick="selFmt(this)"><div class="fmt-ico" style="font-size:14px;font-family:var(--font-head);font-weight:800;color:var(--text-muted);">30'</div><div class="fmt-nm">30 min</div></div>
+          <div class="fmt-opt sel" onclick="selFmt(this)"><div class="fmt-ico" style="font-size:14px;font-family:var(--font-head);font-weight:800;">90'</div><div class="fmt-nm">90 min</div></div>
+          <div class="fmt-opt" onclick="selFmt(this)"><div class="fmt-ico" style="font-size:14px;font-family:var(--font-head);font-weight:800;color:var(--text-muted);">2h</div><div class="fmt-nm">2 horas</div></div>
+        </div>
+        <div class="cta-block" style="margin-top:8px;">
+          <button class="btn-primary" onclick="pubNext(4)">Siguiente → Vista previa</button>
+          <button class="btn-secondary" onclick="pubNext(2)">Atrás</button>
+        </div>
+      </div>
+
+      <!-- STEP 4 -->
+      <div id="pub-step4" style="display:none;">
+        <div class="sec-lbl">Vista previa de tu skill</div>
+        <div class="preview-card">
+          <div class="sk-user-row">
+            <div class="avatar" style="background:rgba(242,201,76,0.1);color:#F2C94C;">CM</div>
+            <div><div class="user-name">Carmen Molina</div><div class="user-loc">Madrid · ahora</div></div>
+            <div class="verified"><i class="ti ti-check"></i></div>
+          </div>
+          <div class="sk-title" style="font-size:14px;">Fundraising Series A con fondos europeos</div>
+          <div class="sk-desc">Deck, inversores target, pitch y cierre. 15+ rondas completadas.</div>
+          <div class="tags"><span class="tag tag-y">Finanzas</span><span class="tag tag-n">M&A</span><span class="tag tag-n">Inversores</span></div>
+          <div class="sk-footer">
+            <div class="price-label"><i class="ti ti-diamond"></i><span id="preview-price">60 tkn</span> / sesión</div>
+            <div class="btn-request" style="cursor:default;">Solicitar</div>
+          </div>
+        </div>
+        <div class="sec-lbl">Verificación previa</div>
+        <div class="checklist">
+          <div class="chk-item"><div class="chk-ico ok"><i class="ti ti-check"></i></div><div><div class="chk-text">Título descriptivo</div><div class="chk-sub">Claro y específico</div></div></div>
+          <div class="chk-item"><div class="chk-ico ok"><i class="ti ti-check"></i></div><div><div class="chk-text">Descripción completa</div><div class="chk-sub">198 de 300 caracteres</div></div></div>
+          <div class="chk-item"><div class="chk-ico ok"><i class="ti ti-check"></i></div><div><div class="chk-text">Precio configurado</div><div class="chk-sub" id="price-check-sub">60 tkn · bonus hasta +24</div></div></div>
+          <div class="chk-item"><div class="chk-ico warn"><i class="ti ti-alert-triangle"></i></div><div><div class="chk-text">Sin foto de portada</div><div class="chk-sub">Recomendado, no obligatorio</div></div></div>
+        </div>
+        <div class="cta-block">
+          <button class="btn-primary" onclick="goTo('screen-feed')">Publicar habilidad</button>
+          <button class="btn-secondary" onclick="pubNext(3)">Atrás</button>
+          <button class="btn-secondary" onclick="goTo('screen-feed')">Guardar borrador</button>
+        </div>
+      </div>
+      <div style="height:16px;"></div>
+    </div>
+    <div class="bottom-nav">
+      <div class="nav-item" onclick="goTo('screen-feed')"><i class="ti ti-home"></i>Feed</div>
+      <div class="nav-item" onclick="goTo('screen-notif')"><i class="ti ti-bell"></i>Alertas</div>
+      <div class="nav-item active"><i class="ti ti-rocket"></i>Publicar</div>
+      <div class="nav-item" onclick="goTo('screen-wallet')"><i class="ti ti-diamond"></i>Wallet</div>
+      <div class="nav-item" onclick="goTo('screen-profile')"><i class="ti ti-user"></i>Perfil</div>
+    </div>
+  </div>
+
+
+  <!-- ═══════════════════════════════════════════════
+       SCREEN: NOTIFICACIONES
+  ═══════════════════════════════════════════════ -->
+  <div class="screen" id="screen-notif">
+    <div class="status-bar">
+      <span class="status-time">9:41</span>
+      <div class="status-icons"><i class="ti ti-wifi"></i><i class="ti ti-battery-2"></i></div>
+    </div>
+    <div class="topbar">
+      <div class="topbar-title">Alertas</div>
+      <span style="font-family:var(--font-body);font-size:11px;color:var(--yellow);cursor:pointer;font-weight:500;">Todo leído</span>
+    </div>
+    <div class="screen-body">
+      <div class="notif-item notif-unread" onclick="goTo('screen-request')">
+        <div class="notif-ico" style="background:rgba(242,201,76,0.12);color:#F2C94C;"><i class="ti ti-calendar"></i></div>
+        <div class="notif-body">
+          <div class="notif-title">Nueva solicitud de sesión</div>
+          <div class="notif-desc">Jorge Almeida quiere reservar tu skill "Estructuración M&A". Ha propuesto el martes 14 a las 11:00h.</div>
+          <div class="notif-time">hace 12 min</div>
+        </div>
+        <div class="notif-dot"></div>
+      </div>
+      <div class="notif-item notif-unread">
+        <div class="notif-ico" style="background:rgba(76,175,125,0.12);color:#4CAF7D;"><i class="ti ti-diamond"></i></div>
+        <div class="notif-body">
+          <div class="notif-title">Has recibido +8 tokens de bonus</div>
+          <div class="notif-desc">Ana Torres valoró tu sesión con 5 estrellas y te dejó un bonus extra de 8 tokens.</div>
+          <div class="notif-time">hace 2h</div>
+        </div>
+        <div class="notif-dot"></div>
+      </div>
+      <div class="notif-item">
+        <div class="notif-ico" style="background:#2E2E30;color:#888;"><i class="ti ti-check"></i></div>
+        <div class="notif-body">
+          <div class="notif-title">Sesión confirmada</div>
+          <div class="notif-desc">Carmen Molina aceptó tu solicitud. Sesión el lunes 13 a las 10:30h.</div>
+          <div class="notif-time">ayer</div>
+        </div>
+      </div>
+      <div class="notif-item">
+        <div class="notif-ico" style="background:#2E2E30;color:#888;"><i class="ti ti-user-plus"></i></div>
+        <div class="notif-body">
+          <div class="notif-title">Nuevo nodo en la red</div>
+          <div class="notif-desc">Marta Llopis se ha unido a Hypha. Su expertise: Headhunting estratégico.</div>
+          <div class="notif-time">hace 2 días</div>
+        </div>
+      </div>
+      <div class="notif-item">
+        <div class="notif-ico" style="background:rgba(242,201,76,0.12);color:#F2C94C;"><i class="ti ti-star"></i></div>
+        <div class="notif-body">
+          <div class="notif-title">Tu skill está en tendencia</div>
+          <div class="notif-desc">"Estructuración M&A" ha superado las 10 solicitudes. Considera subir el precio base.</div>
+          <div class="notif-time">hace 3 días</div>
+        </div>
+      </div>
+      <div class="notif-item">
+        <div class="notif-ico" style="background:rgba(76,175,125,0.12);color:#4CAF7D;"><i class="ti ti-coin"></i></div>
+        <div class="notif-body">
+          <div class="notif-title">Cash out procesado</div>
+          <div class="notif-desc">Tu transferencia de 200,00 € ha sido enviada por SEPA. Llegará en 1–2 días hábiles.</div>
+          <div class="notif-time">hace 5 días</div>
+        </div>
+      </div>
+      <div style="height:16px;"></div>
+    </div>
+    <div class="bottom-nav">
+      <div class="nav-item" onclick="goTo('screen-feed')"><i class="ti ti-home"></i>Feed</div>
+      <div class="nav-item active"><i class="ti ti-bell"></i>Alertas</div>
+      <div class="nav-item" onclick="goTo('screen-publish')"><i class="ti ti-rocket"></i>Publicar</div>
+      <div class="nav-item" onclick="goTo('screen-wallet')"><i class="ti ti-diamond"></i>Wallet</div>
+      <div class="nav-item" onclick="goTo('screen-profile')"><i class="ti ti-user"></i>Perfil</div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════
+       SCREEN: SOLICITAR SESIÓN
+  ═══════════════════════════════════════════════ -->
+  <div class="screen" id="screen-request">
+    <div class="status-bar">
+      <span class="status-time">9:41</span>
+      <div class="status-icons"><i class="ti ti-wifi"></i><i class="ti ti-battery-2"></i></div>
+    </div>
+    <div class="topbar">
+      <div class="topbar-back" onclick="goTo('screen-detail')">
+        <i class="ti ti-arrow-left"></i>
+        <div class="topbar-title" style="font-size:20px;">Solicitar</div>
+      </div>
+    </div>
+    <div class="screen-body">
+      <div style="margin:0 18px 14px;background:var(--card);border:1px solid var(--border);border-radius:18px;padding:16px;">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;">
+          <div style="width:48px;height:48px;border-radius:50%;border:2px solid var(--yellow);background:rgba(242,201,76,0.08);display:flex;align-items:center;justify-content:center;font-family:var(--font-body);font-size:14px;font-weight:700;color:var(--yellow);flex-shrink:0;">CM</div>
+          <div>
+            <div style="font-family:var(--font-head);font-size:18px;font-weight:800;color:var(--text);text-transform:uppercase;line-height:1;">Carmen Molina</div>
+            <div style="font-family:var(--font-body);font-size:11px;color:var(--text-dim);margin-top:2px;">Partner M&A · 4.9 ★ · 34 sesiones</div>
+          </div>
+        </div>
+        <div style="background:#2E2E30;border-radius:12px;padding:12px;margin-bottom:0;">
+          <div style="font-family:var(--font-head);font-size:14px;font-weight:700;color:var(--text);text-transform:uppercase;margin-bottom:3px;">Estructuración M&A para founders</div>
+          <div style="font-family:var(--font-body);font-size:11px;color:var(--text-dim);">90 min · Videollamada · <span style="color:var(--yellow);font-weight:600;">40 tkn base</span></div>
+        </div>
+      </div>
+
+      <div class="sec-lbl">Elige fecha</div>
+      <div style="display:flex;gap:6px;padding:0 18px 14px;overflow-x:auto;scrollbar-width:none;">
+        <div style="flex-shrink:0;background:var(--yellow);border-radius:12px;padding:10px 14px;text-align:center;cursor:pointer;">
+          <div style="font-family:var(--font-body);font-size:9px;color:#1A1A1A;font-weight:600;">LUN</div>
+          <div style="font-family:var(--font-head);font-size:20px;font-weight:800;color:#1A1A1A;line-height:1.1;">13</div>
+        </div>
+        <div class="date-chip" onclick="selDate(this)" style="flex-shrink:0;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:10px 14px;text-align:center;cursor:pointer;">
+          <div style="font-family:var(--font-body);font-size:9px;color:var(--text-muted);font-weight:600;">MAR</div>
+          <div style="font-family:var(--font-head);font-size:20px;font-weight:800;color:var(--text);line-height:1.1;">14</div>
+        </div>
+        <div class="date-chip" onclick="selDate(this)" style="flex-shrink:0;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:10px 14px;text-align:center;cursor:pointer;">
+          <div style="font-family:var(--font-body);font-size:9px;color:var(--text-muted);font-weight:600;">MIÉ</div>
+          <div style="font-family:var(--font-head);font-size:20px;font-weight:800;color:var(--text);line-height:1.1;">15</div>
+        </div>
+        <div class="date-chip" onclick="selDate(this)" style="flex-shrink:0;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:10px 14px;text-align:center;cursor:pointer;">
+          <div style="font-family:var(--font-body);font-size:9px;color:var(--text-muted);font-weight:600;">JUE</div>
+          <div style="font-family:var(--font-head);font-size:20px;font-weight:800;color:var(--text);line-height:1.1;">16</div>
+        </div>
+        <div class="date-chip" onclick="selDate(this)" style="flex-shrink:0;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:10px 14px;text-align:center;cursor:pointer;">
+          <div style="font-family:var(--font-body);font-size:9px;color:var(--text-muted);font-weight:600;">VIE</div>
+          <div style="font-family:var(--font-head);font-size:20px;font-weight:800;color:var(--text);line-height:1.1;">17</div>
+        </div>
+      </div>
+
+      <div class="sec-lbl">Elige hora</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;padding:0 18px 14px;">
+        <div class="hour-chip" onclick="selHour(this)" style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:8px 14px;font-family:var(--font-body);font-size:12px;font-weight:600;color:var(--text-sec);cursor:pointer;">9:00</div>
+        <div class="hour-chip on" style="background:var(--yellow);border:1px solid var(--yellow);border-radius:10px;padding:8px 14px;font-family:var(--font-body);font-size:12px;font-weight:700;color:#1A1A1A;cursor:pointer;">10:30</div>
+        <div class="hour-chip" onclick="selHour(this)" style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:8px 14px;font-family:var(--font-body);font-size:12px;font-weight:600;color:var(--text-sec);cursor:pointer;">12:00</div>
+        <div class="hour-chip" onclick="selHour(this)" style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:8px 14px;font-family:var(--font-body);font-size:12px;font-weight:600;color:var(--text-sec);cursor:pointer;">15:00</div>
+        <div class="hour-chip" onclick="selHour(this)" style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:8px 14px;font-family:var(--font-body);font-size:12px;font-weight:600;color:var(--text-sec);cursor:pointer;">16:30</div>
+      </div>
+
+      <div style="margin:0 18px 14px;">
+        <div style="font-family:var(--font-body);font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-dim);margin-bottom:6px;">Mensaje al experto (opcional)</div>
+        <textarea style="width:100%;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px 14px;font-family:var(--font-body);font-size:12px;color:var(--text-sec);outline:none;resize:none;transition:border-color 0.2s;" rows="3" placeholder="Cuéntale brevemente tu situación y qué esperas de la sesión..."></textarea>
+      </div>
+
+      <div style="margin:0 18px 14px;background:var(--card);border:1px solid var(--border);border-radius:16px;overflow:hidden;">
+        <div style="display:flex;justify-content:space-between;padding:10px 16px;border-bottom:1px solid #2E2E30;">
+          <span style="font-family:var(--font-body);font-size:11px;color:var(--text-dim);">Fecha propuesta</span>
+          <span style="font-family:var(--font-body);font-size:11px;font-weight:600;color:var(--text-sec);">Lun 13 · 10:30h</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;padding:10px 16px;border-bottom:1px solid #2E2E30;">
+          <span style="font-family:var(--font-body);font-size:11px;color:var(--text-dim);">Coste de la sesión</span>
+          <span style="font-family:var(--font-head);font-size:16px;font-weight:700;color:var(--yellow);">40 tkn</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;padding:10px 16px;">
+          <span style="font-family:var(--font-body);font-size:11px;color:var(--text-dim);">Saldo tras solicitar</span>
+          <span style="font-family:var(--font-body);font-size:11px;font-weight:600;color:var(--text-sec);">200 tkn</span>
+        </div>
+      </div>
+
+      <div style="margin:0 18px 16px;display:flex;flex-direction:column;gap:8px;">
+        <button class="btn-primary" onclick="goTo('screen-req-confirm')">Confirmar solicitud · 40 tkn</button>
+        <button class="btn-secondary" onclick="goTo('screen-detail')">Cancelar</button>
+      </div>
+      <div style="height:16px;"></div>
+    </div>
+    <div class="bottom-nav">
+      <div class="nav-item on"><i class="ti ti-home"></i>Feed</div>
+      <div class="nav-item" onclick="goTo('screen-notif')"><i class="ti ti-bell"></i>Alertas</div>
+      <div class="nav-item" onclick="goTo('screen-publish')"><i class="ti ti-rocket"></i>Publicar</div>
+      <div class="nav-item" onclick="goTo('screen-wallet')"><i class="ti ti-diamond"></i>Wallet</div>
+      <div class="nav-item" onclick="goTo('screen-profile')"><i class="ti ti-user"></i>Perfil</div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════
+       SCREEN: CONFIRMACIÓN DE SOLICITUD
+  ═══════════════════════════════════════════════ -->
+  <div class="screen" id="screen-req-confirm">
+    <div class="status-bar">
+      <span class="status-time">9:41</span>
+      <div class="status-icons"><i class="ti ti-wifi"></i><i class="ti ti-battery-2"></i></div>
+    </div>
+    <div class="topbar">
+      <div class="topbar-title" style="font-size:20px;">Confirmado</div>
+    </div>
+    <div class="screen-body">
+      <div style="display:flex;flex-direction:column;align-items:center;padding:40px 22px 24px;text-align:center;">
+        <div style="width:72px;height:72px;border-radius:50%;background:var(--yellow);display:flex;align-items:center;justify-content:center;margin-bottom:18px;">
+          <i class="ti ti-calendar-check" style="font-size:34px;color:#1A1A1A;"></i>
+        </div>
+        <div style="font-family:var(--font-head);font-size:26px;font-weight:800;color:var(--text);text-transform:uppercase;margin-bottom:6px;">¡Solicitud enviada!</div>
+        <div style="font-family:var(--font-body);font-size:12px;color:var(--text-dim);line-height:1.6;">Carmen Molina tiene 24h para confirmar.<br>Te avisaremos en cuanto acepte.</div>
+      </div>
+
+      <div style="margin:0 18px 14px;background:var(--card);border:1px solid var(--border);border-radius:16px;overflow:hidden;">
+        <div style="font-family:var(--font-body);font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-dim);padding:12px 16px 8px;">Resumen</div>
+        <div style="display:flex;justify-content:space-between;padding:10px 16px;border-top:1px solid #2E2E30;">
+          <span style="font-family:var(--font-body);font-size:11px;color:var(--text-dim);">Experto</span>
+          <span style="font-family:var(--font-body);font-size:11px;font-weight:600;color:var(--text-sec);">Carmen Molina</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;padding:10px 16px;border-top:1px solid #2E2E30;">
+          <span style="font-family:var(--font-body);font-size:11px;color:var(--text-dim);">Skill</span>
+          <span style="font-family:var(--font-body);font-size:11px;font-weight:600;color:var(--text-sec);">Estructuración M&A</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;padding:10px 16px;border-top:1px solid #2E2E30;">
+          <span style="font-family:var(--font-body);font-size:11px;color:var(--text-dim);">Fecha propuesta</span>
+          <span style="font-family:var(--font-body);font-size:11px;font-weight:600;color:var(--text-sec);">Lun 13 mayo · 10:30h</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 16px;border-top:1px solid #2E2E30;">
+          <span style="font-family:var(--font-body);font-size:11px;color:var(--text-dim);">Tokens reservados</span>
+          <span style="font-family:var(--font-head);font-size:18px;font-weight:800;color:var(--yellow);">40 tkn</span>
+        </div>
+      </div>
+
+      <div style="margin:0 18px 16px;background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px 16px;display:flex;align-items:center;gap:14px;">
+        <div style="width:38px;height:38px;border-radius:12px;background:rgba(242,201,76,0.1);color:var(--yellow);display:flex;align-items:center;justify-content:center;font-size:18px;"><i class="ti ti-diamond"></i></div>
+        <div>
+          <div style="font-family:var(--font-head);font-size:22px;font-weight:800;color:var(--yellow);">200 tkn</div>
+          <div style="font-family:var(--font-body);font-size:10px;color:var(--text-dim);">Saldo disponible</div>
+        </div>
+      </div>
+
+      <div style="margin:0 18px 16px;display:flex;flex-direction:column;gap:8px;">
+        <button class="btn-primary" onclick="goTo('screen-feed')">Volver al feed</button>
+        <button class="btn-secondary" onclick="goTo('screen-notif')">Ver mis solicitudes</button>
+      </div>
+    </div>
+    <div class="bottom-nav">
+      <div class="nav-item on"><i class="ti ti-home"></i>Feed</div>
+      <div class="nav-item" onclick="goTo('screen-notif')"><i class="ti ti-bell"></i>Alertas</div>
+      <div class="nav-item" onclick="goTo('screen-publish')"><i class="ti ti-rocket"></i>Publicar</div>
+      <div class="nav-item" onclick="goTo('screen-wallet')"><i class="ti ti-diamond"></i>Wallet</div>
+      <div class="nav-item" onclick="goTo('screen-profile')"><i class="ti ti-user"></i>Perfil</div>
+    </div>
+  </div>
+
+</div><!-- /phone-frame -->
+</div><!-- /app-shell -->
+
+<script>
+
+function selDate(el) {
+  document.querySelectorAll('.date-chip').forEach(d => {
+    d.style.background = 'var(--card)';
+    d.style.borderColor = 'var(--border)';
+    d.querySelector('div:last-child').style.color = 'var(--text)';
+    d.querySelector('div:first-child').style.color = 'var(--text-muted)';
+  });
+  el.style.background = 'var(--yellow)';
+  el.style.borderColor = 'var(--yellow)';
+  el.querySelector('div:last-child').style.color = '#1A1A1A';
+  el.querySelector('div:first-child').style.color = '#1A1A1A';
+}
+function selHour(el) {
+  document.querySelectorAll('.hour-chip').forEach(h => {
+    h.style.background = 'var(--card)';
+    h.style.borderColor = 'var(--border)';
+    h.style.color = 'var(--text-sec)';
+    h.style.fontWeight = '600';
+  });
+  el.style.background = 'var(--yellow)';
+  el.style.borderColor = 'var(--yellow)';
+  el.style.color = '#1A1A1A';
+  el.style.fontWeight = '700';
+}
+
+function goTo(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  document.querySelectorAll('.screen-body').forEach(b => b.scrollTop = 0);
+}
+
+function filterCat(el, name) {
+  document.querySelectorAll('.cat').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+}
+
+function updateCashout(val) {
+  val = parseInt(val);
+  document.getElementById('cashVal').textContent = val + ' tkn';
+  document.getElementById('feeTokens').textContent = val + ' tkn';
+  const eur = (val * 0.5).toLocaleString('es-ES', {minimumFractionDigits:2, maximumFractionDigits:2});
+  document.getElementById('cashEur').textContent = eur + ' €';
+  document.getElementById('feeTotal').textContent = eur + ' €';
+}
+
+function selectMethod(el) {
+  document.querySelectorAll('.method-item').forEach(m => {
+    m.classList.remove('selected');
+    const r = m.querySelector('.radio');
+    r.classList.remove('on');
+    r.innerHTML = '';
+  });
+  el.classList.add('selected');
+  const r = el.querySelector('.radio');
+  r.classList.add('on');
+  r.innerHTML = '<div class="radio-dot"></div>';
+}
+
+function selCat(el) {
+  document.querySelectorAll('.cat-opt').forEach(c => c.classList.remove('sel'));
+  el.classList.add('sel');
+}
+
+function selFmt(el) {
+  el.closest('.format-grid').querySelectorAll('.fmt-opt').forEach(f => f.classList.remove('sel'));
+  el.classList.add('sel');
+}
+
+function updatePrice(val) {
+  val = parseInt(val);
+  const bonus = Math.round(val * 0.4);
+  document.getElementById('priceVal').textContent = val + ' tkn';
+  document.getElementById('bonusVal').textContent = '+' + bonus + ' tkn';
+  document.getElementById('preview-price').textContent = val + ' tkn';
+  document.getElementById('price-check-sub').textContent = val + ' tkn · bonus hasta +' + bonus;
+}
+
+function pubNext(step) {
+  for (let i = 1; i <= 4; i++) {
+    document.getElementById('pub-step' + i).style.display = i === step ? 'block' : 'none';
+    const dot = document.getElementById('sd' + i);
+    const lbl = document.getElementById('sl' + i);
+    dot.className = 'step-dot' + (i < step ? ' done' : i === step ? ' curr' : '');
+    dot.innerHTML = i < step ? '<i class="ti ti-check" style="font-size:12px;"></i>' : i;
+    lbl.className = 'step-lbl' + (i < step ? ' done' : i === step ? ' curr' : '');
+  }
+  document.querySelector('#screen-publish .screen-body').scrollTop = 0;
+}
+
+// title char count
+document.getElementById('pub-title').addEventListener('input', function() {
+  document.getElementById('title-count').textContent = this.value.length + ' / 80';
+});
+
+// wallet nav tap
+document.querySelectorAll('.nav-item').forEach(item => {
+  const txt = item.querySelector('i').className;
+  if (txt.includes('diamond')) item.onclick = () => goTo('screen-wallet');
+});
+</script>
+</body>
+</html>
